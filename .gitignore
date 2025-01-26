@@ -169,3 +169,10 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+model/
+figures/
+papers/
+report_figures/
+wits_models/
+wits_models/loss
