@@ -31,8 +31,8 @@ class TrainingFramework:
                 for kan_hyp in self.KAN_hyps:
                     grid_range = [-3*sigma, 3*sigma]
                     grid = min(int(3*sigma+1), 11)
-                    actor_c1 = kan.KAN(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)), grid_range=grid_range, device=self.device)
-                    actor_c2 = kan.KAN(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)), grid_range=grid_range, device=self.device)
+                    actor_c1 = kan.KAN(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)).item(), grid_range=grid_range, device=self.device)
+                    actor_c2 = kan.KAN(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)).item(), grid_range=grid_range, device=self.device)
                     env = WitsEnv.WitsEnv(k=k, sigma=sigma, actor_c1=actor_c1, actor_c2=actor_c2, dims=1, device=self.device)
 
                     gradDesc = WitsPPO.WitsGradDesc(env, actor_c1, actor_c2, noise=True)
