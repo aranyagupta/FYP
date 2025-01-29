@@ -9,10 +9,17 @@ class CombinedKan(nn.Module):
         self.actor_c1 = kan.KAN(width=kan_hyps, grid=grid, k=k, seed=torch.randint(low=0, high=2025, size=(1,1)), grid_range=grid_range, device=device)
         self.actor_c2 = kan.KAN(width=kan_hyps, grid=grid, k=k, seed=torch.randint(low=0, high=2025, size=(1,1)), grid_range=grid_range, device=device)
         self.noise = noise
+    
 
-    def forward(self, x):
+    def forward(self, x, noise_data=False):
         u_1 = self.actor_c1(x)
-        y_2 = u_1 + self.noise*torch.normal(0, 1, x.size(), device=self.device)
+        
+        y_2 = 0
+        if self.noise_data:
+            y_2 = u_1 + self.noise_data
+        else:
+            y_2 = u_1 + self.noise*torch.normal(0, 1, x.size(), device=self.device)
+        
         u_2 = self.actor_c2(y_2)
         return u_1, y_2, u_2
 
