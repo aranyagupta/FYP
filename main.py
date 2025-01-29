@@ -3,6 +3,7 @@ import TrainingFramework
 from DataVis import *
 from SplineComposer import *
 import kan
+from itertools import product
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -20,10 +21,10 @@ DISPLAY_SYMBOLIC = False
 PLOT_GRAPHS = False
 
 if __name__ == "__main__":
-    min_hidden_layers = 2
-    max_hidden_layers = 6
+    min_hidden_layers = 3
+    max_hidden_layers = 10
     min_layer_width = 2
-    max_layer_width = 6
+    max_layer_width = 8
 
     kvals = [0.05, 0.6, 0.05]
     sigvals = [2.0, 7.0, 0.5]

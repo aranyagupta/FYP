@@ -38,7 +38,7 @@ class TrainingFramework:
                     gradDesc = WitsPPO.WitsGradDesc(env, actor_c1, actor_c2, noise=True)
                     
                     best_loss = 1e7
-                    gradDesc.train(1000, 100)
+                    gradDesc.train(4000, 250)
                     
                     testEnv = WitsEnv.WitsEnv(k, sigma, actor_c1, actor_c2, dims=1, device=self.device, mode='TEST')
                     loss = testEnv.step_timesteps(actor_c1, actor_c2, 100000)
@@ -63,7 +63,7 @@ class TrainingFramework:
                     gradDesc = WitsPPO.WitsGradDescCombined(env, actor)
                     
                     best_loss = 1e7
-                    gradDesc.train(3000, 100)
+                    gradDesc.train(4000, 250)
                     
                     testEnv = WitsEnv.WitsEnvCombined(actor, env, self.device, mode='TEST')
                     loss = testEnv.step_timesteps(100000)
