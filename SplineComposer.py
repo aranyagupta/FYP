@@ -122,27 +122,3 @@ def plot_sympy_func(sympy_func, interval, num_points=1000):
     plt.grid(True)
     plt.legend(fontsize=12)
     plt.show()
-
-if __name__ == "__main__":
-    torch.set_default_dtype(torch.float64)
-    actor_c1 = kan.KAN.loadckpt("wits_models/DGD-k-0.30-sigma-4.35-hyps-[[1, 0], [2, 0], [2, 0], [1, 0]]-c1")
-    actor_c2 = kan.KAN.loadckpt("wits_models/DGD-k-0.30-sigma-4.35-hyps-[[1, 0], [2, 0], [2, 0], [1, 0]]-c2")
-
-    actor_c1.plot()
-    plt.show()
-    actor_c2.plot()
-    plt.show()
-
-    act_fun = actor_c1.act_fun
-    individual_funcs = individual_kanlayers(act_fun=act_fun)
-
-    print(individual_funcs)
-
-    composed_function = compose_kanlayers(act_fun=act_fun)
-    print(composed_function)
-    plot_sympy_func(composed_function, (-20.0, 20.0))
-
-    
-
-
-            

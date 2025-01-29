@@ -38,10 +38,10 @@ class TrainingFramework:
                     gradDesc = WitsPPO.WitsGradDesc(env, actor_c1, actor_c2, noise=True)
                     
                     best_loss = 1e7
-                    gradDesc.train(3000, 100)
+                    gradDesc.train(1000, 100)
                     
-                    test = WitsEnv.WitsActorTest(actor_c1, actor_c2, env, self.device, noise=True)
-                    loss = test.test(100000)
+                    testEnv = WitsEnv.WitsEnv(k, sigma, actor_c1, actor_c2, dims=1, device=self.device, mode='TEST')
+                    loss = testEnv.step_timesteps(actor_c1, actor_c2, 100000)
 
                     while (loss < best_loss):
                         self._store_actors("DGD", actor_c1, actor_c2, k, sigma, kan_hyp)
@@ -49,7 +49,7 @@ class TrainingFramework:
                         
                         best_loss = loss
                         gradDesc.train(1000, 100)
-                        loss = test.test(100000)
+                        loss = testEnv.step_timesteps(actor_c1, actor_c2, 100000)
 
     def train_dgd_combined(self):
         for k in self.k_range:
@@ -65,15 +65,15 @@ class TrainingFramework:
                     best_loss = 1e7
                     gradDesc.train(3000, 100)
                     
-                    test = WitsEnv.WitsActorTestCombined(actor, env, self.device)
-                    loss = test.test(100000)
+                    testEnv = WitsEnv.WitsEnvCombined(actor, env, self.device, mode='TEST')
+                    loss = testEnv.step_timesteps(100000)
                     while (loss < best_loss):
                         self._store_actors("DGDCOMB",actor.actor_c1, actor.actor_c2, k, sigma, kan_hyp)
                         self._store_loss("DGDCOMB", loss, k, sigma, kan_hyp)
                                                 
                         best_loss = loss
                         gradDesc.train(1000, 100)
-                        loss = test.test(100000)
+                        loss = testEnv.step_timesteps(100000)
 
 
     def train_ppo(self):
@@ -90,12 +90,14 @@ class TrainingFramework:
                     
                     best_loss = 1e7
                     ppo.learn(30000)
-                    test = WitsEnv.WitsActorTestCombined(actor, env, self.device)
-                    loss = test.test(100000)
+                    testEnv = WitsEnv.WitsEnvCombined(k, sigma, actor, self.device)
+                    loss = testEnv.step_timesteps(100000)
+                    # test = WitsEnv.WitsActorTestCombined(actor, env, self.device)
+                    # loss = test.test(100000)
                     while (loss < best_loss):
                         self._store_actors("PPO",actor.actor_c1, actor.actor_c2, k, sigma, kan_hyp)
                         self._store_loss("PPO", loss, k, sigma, kan_hyp)
                                                 
                         best_loss = loss
                         ppo.learn(10000)
-                        loss = test.test(100000)
+                        loss = testEnv.step_timesteps(100000)

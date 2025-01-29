@@ -15,44 +15,29 @@ class WitsEnv():
         sigma: standard dev of x_0
         dims: dimension of environment (system state variables)
     '''
-    def __init__(self, k, sigma, actor_c1, actor_c2, dims, device):
+    def __init__(self, k, sigma, actor_c1, actor_c2, dims, device, mode='TRAIN'):
         torch.set_default_dtype(torch.float64)
         
         self.k = k
         self.sigma = sigma
         self.dims = dims
         self.device = device
+        self.mode = mode
 
-        self.x_0 = torch.normal(0, self.sigma, (20, self.dims), device=self.device)
-        self.x_1 = actor_c1(self.x_0)
-
-        y_1 = self.x_1 + torch.normal(0, 1, (20,self.dims), device=self.device)
-        u_2 = actor_c2(y_1)
-        self.x_2 = u_2
-
-    def reset(self, actor_c1, actor_c2, seed = None):
-        super().reset(seed=seed)
-        actor_c1.reset()
-        actor_c2.reset()
-
-        self.x_0 = torch.normal(0, self.sigma, (1,self.dims), device=self.device)
-        self.x_1 = actor_c1(self.x_0)
-
-        y_1 = self.x_1 + torch.normal(0, 1, (1,self.dims), device=self.device)
-        u_2 = actor_c2(y_1)
-        self.x_2 = u_2
-
-        return self.x_0, y_1 # obs for controller 1 and obs for controller 2
+        if mode == 'TEST':
+            self.x_0 = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
+            self.noise = torch.normal(0, 1, (100000, self.dims), device=self.device)
     
     def step_timesteps(self, actor_c1, actor_c2, timesteps, noise=True):
-        self.x_0 = torch.normal(0, self.sigma, (timesteps,self.dims), device=self.device)
-        # u_1 = actor_c1(self.x_0).detach()
-        # self.x_1 = u_1
+        if self.mode == 'TEST':
+            with torch.no_grad():
+                u_1 = actor_c1(self.x_0)
+                y_1 = u_1 + noise*self.noise
+                u_2 = actor_c2(y_1)
+                reward = (self.k**2 * (self.x_0 - u_1)**2 + (u_2-u_1)**2)
+                return reward.mean()
         
-        # y_1 = self.x_1 + torch.normal(0, 1, (timesteps,self.dims), device=self.device)
-        # u_2 = actor_c2(y_1).detach()
-        # self.x_2 = u_2
-
+        self.x_0 = torch.normal(0, self.sigma, (timesteps,self.dims), device=self.device)
         u_1 = actor_c1(self.x_0)
         self.x_1 = u_1
         
@@ -64,8 +49,7 @@ class WitsEnv():
         terminated = False
         truncated = False
 
-        # two separate but equal rewards to separate computation paths for KAN 1 and KAN 2
-        reward = - (self.k**2 * (self.x_0 - self.x_1)**2 + (self.x_2-self.x_1)**2) # reward for controller 1
+        reward = - (self.k**2 * (self.x_0 - self.x_1)**2 + (self.x_2-self.x_1)**2)
 
         act_c1 = self.x_1
         act_c2 = self.x_2 
@@ -75,16 +59,28 @@ class WitsEnv():
         return obs_c1, obs_c2, reward, terminated, truncated
 
 class WitsEnvCombined:
-    def __init__(self, k, sigma, actor_combined, device):
+    def __init__(self, k, sigma, actor_combined, device, mode='TRAIN'):
         torch.set_default_dtype(torch.float64)
         
         self.k = k
         self.sigma = sigma
         self.device = device
         self.actor_combined = actor_combined
+        self.mode = mode
+
+        if self.mode == 'TEST':
+            self.x = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
+            self.noise = torch.normal(0, 1, (100000, self.dims), device=self.device)
 
     def step_timesteps(self, timesteps):
+        if self.mode=='TEST':
+            with torch.no_grad():
+                u_1, y_2, u_2 = self.actor_combined(self.x, noise_data=self.noise)
+                reward = (self.k**2 * (x - u_1)**2 + (u_2-u_1)**2)
+                return reward.mean()
+        
         x = torch.normal(0, self.sigma, (timesteps,1), device=self.device)
+        
         u_1, y_2, u_2 = self.actor_combined(x)
         # u_1 = u_1.clone().detach()
         # y_2 = y_2.clone().detach()
@@ -92,38 +88,7 @@ class WitsEnvCombined:
         obs_c1 = x
         obs_c2 = y_2
         reward = - (self.k**2 * (x - u_1)**2 + (u_2-u_1)**2)
-
         return obs_c1, obs_c2, reward, False, False
-
-
-# ----------------- Test Environments ----------------- #
-class WitsActorTestCombined:
-    def __init__(self, actor, env, device):
-        self.actor = actor        
-        self.device = device
-        self.env = env
-        
-    
-    # find E[-(self.k **2 * (self.f(x_0_obs)-self.x_1)**2)] numerically
-    def test(self, timesteps):
-        _, _, rewards, _, _ = self.env.step_timesteps(timesteps=timesteps)
-        rewards = -rewards
-        return rewards.mean()
-
-class WitsActorTest:
-    def __init__(self, actor_c1, actor_c2, env, device, noise=True):
-        self.actor_c1 = actor_c1
-        self.actor_c2 = actor_c2
-        self.device = device
-        self.noise = noise
-        self.env = env
-        
-    
-    # find E[-(self.k **2 * (self.f(x_0_obs)-self.x_1)**2)] numerically
-    def test(self, timesteps):
-        _, _, rewards, _, _ = self.env.step_timesteps(actor_c1=self.actor_c1, actor_c2=self.actor_c2, timesteps=timesteps, noise=self.noise)
-        rewards = -rewards
-        return rewards.mean()
 
 # ----------------- Simplified Environments ----------------- #
 class WitsEnvSimple():
