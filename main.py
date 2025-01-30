@@ -27,7 +27,7 @@ if __name__ == "__main__":
     max_layer_width = 8
 
     kvals = [0.05, 0.6, 0.05]
-    sigvals = [2.0, 7.0, 0.5]
+    sigvals = [2.5, 7.0, 0.5]
     kan_hyps = []
     for num_layers in range(min_hidden_layers, max_hidden_layers+1):
         for layer_width in range(min_layer_width, max_layer_width+1):
