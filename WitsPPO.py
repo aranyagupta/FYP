@@ -190,7 +190,7 @@ class WitsPPOCombined:
 
 		# Keep simulating until we've run more than or equal to specified timesteps per batch
 		while t < self.timesteps_per_batch:
-			observations_c1, _, rewards, _, _ = self.env.step_timesteps(self.max_timesteps_per_episode)
+			observations_c1, _, rewards, _, _ = self.env.step_timesteps(self.max_timesteps_per_episode, self.actor)
 			batch_obs.append(observations_c1)	
 
 			actions, log_probs = self.get_action(observations_c1)
@@ -355,7 +355,7 @@ class WitsGradDescCombined:
 	def train(self, timesteps, batches):
 		for batch in range(batches):
 			# print("batch:", batch)
-			_, _, reward, _, _ = self.env.step_timesteps(timesteps)
+			_, _, reward, _, _ = self.env.step_timesteps(timesteps, self.actor)
 			reward = -reward
 			
 			actor_loss = reward.mean()

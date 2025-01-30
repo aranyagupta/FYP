@@ -15,7 +15,7 @@ class WitsEnv():
         sigma: standard dev of x_0
         dims: dimension of environment (system state variables)
     '''
-    def __init__(self, k, sigma, actor_c1, actor_c2, dims, device, mode='TRAIN'):
+    def __init__(self, k, sigma, dims, device, mode='TRAIN'):
         torch.set_default_dtype(torch.float64)
         
         self.k = k
@@ -59,29 +59,28 @@ class WitsEnv():
         return obs_c1, obs_c2, reward, terminated, truncated
 
 class WitsEnvCombined:
-    def __init__(self, k, sigma, actor_combined, device, mode='TRAIN'):
+    def __init__(self, k, sigma, device, mode='TRAIN'):
         torch.set_default_dtype(torch.float64)
         
         self.k = k
         self.sigma = sigma
         self.device = device
-        self.actor_combined = actor_combined
         self.mode = mode
 
         if self.mode == 'TEST':
             self.x = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
             self.noise = torch.normal(0, 1, (100000, self.dims), device=self.device)
 
-    def step_timesteps(self, timesteps):
+    def step_timesteps(self, timesteps, actor_combined):
         if self.mode=='TEST':
             with torch.no_grad():
-                u_1, y_2, u_2 = self.actor_combined(self.x, noise_data=self.noise)
+                u_1, y_2, u_2 = actor_combined(self.x, noise_data=self.noise)
                 reward = (self.k**2 * (x - u_1)**2 + (u_2-u_1)**2)
                 return reward.mean()
         
         x = torch.normal(0, self.sigma, (timesteps,1), device=self.device)
         
-        u_1, y_2, u_2 = self.actor_combined(x)
+        u_1, y_2, u_2 = actor_combined(x)
         # u_1 = u_1.clone().detach()
         # y_2 = y_2.clone().detach()
         

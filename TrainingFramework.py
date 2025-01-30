@@ -26,21 +26,22 @@ class TrainingFramework:
     
 
     def train_dgd(self):
+        
         for k in self.k_range:
             for sigma in self.sigma_range:
+                testEnv = WitsEnv.WitsEnv(k, sigma, dims=1, device=self.device, mode='TEST')
                 for kan_hyp in self.KAN_hyps:
                     grid_range = [-3*sigma, 3*sigma]
                     grid = min(int(3*sigma+1), 11)
                     actor_c1 = kan.KAN(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)).item(), grid_range=grid_range, device=self.device)
                     actor_c2 = kan.KAN(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)).item(), grid_range=grid_range, device=self.device)
-                    env = WitsEnv.WitsEnv(k=k, sigma=sigma, actor_c1=actor_c1, actor_c2=actor_c2, dims=1, device=self.device)
+                    env = WitsEnv.WitsEnv(k=k, sigma=sigma, dims=1, device=self.device)
 
                     gradDesc = WitsPPO.WitsGradDesc(env, actor_c1, actor_c2, noise=True)
                     
                     best_loss = 1e7
-                    gradDesc.train(4000, 250)
+                    gradDesc.train(1000, 1000)
                     
-                    testEnv = WitsEnv.WitsEnv(k, sigma, actor_c1, actor_c2, dims=1, device=self.device, mode='TEST')
                     loss = testEnv.step_timesteps(actor_c1, actor_c2, 100000)
 
                     while (loss < best_loss):
@@ -54,6 +55,7 @@ class TrainingFramework:
     def train_dgd_combined(self):
         for k in self.k_range:
             for sigma in self.sigma_range:
+                testEnv = WitsEnv.WitsEnvCombined(actor, env, self.device, mode='TEST')
                 for kan_hyp in self.KAN_hyps:
                     grid_range = [-3*sigma, 3*sigma]
                     grid = min(int(3*sigma+1), 11)
@@ -65,8 +67,7 @@ class TrainingFramework:
                     best_loss = 1e7
                     gradDesc.train(4000, 250)
                     
-                    testEnv = WitsEnv.WitsEnvCombined(actor, env, self.device, mode='TEST')
-                    loss = testEnv.step_timesteps(100000)
+                    loss = testEnv.step_timesteps(100000, actor)
                     while (loss < best_loss):
                         self._store_actors("DGDCOMB",actor.actor_c1, actor.actor_c2, k, sigma, kan_hyp)
                         self._store_loss("DGDCOMB", loss, k, sigma, kan_hyp)
@@ -79,19 +80,19 @@ class TrainingFramework:
     def train_ppo(self):
         for k in self.k_range:
             for sigma in self.sigma_range:
+                testEnv = WitsEnv.WitsEnvCombined(k, sigma, self.device)
                 for kan_hyp in self.KAN_hyps:
                     grid_range = [-3*sigma, 3*sigma]
                     grid = min(int(3*sigma+1), 11)
                     actor = CombinedKan.CombinedKan(kan_hyp, grid, 3, grid_range, self.device, noise=True)
                     critic = kan.KAN(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)), grid_range=grid_range, device=self.device)
-                    env = WitsEnv.WitsEnvCombined(k, sigma, actor, self.device)
+                    env = WitsEnv.WitsEnvCombined(k, sigma, self.device)
 
                     ppo = WitsPPO.WitsPPOCombined(actor, critic, env)
                     
                     best_loss = 1e7
                     ppo.learn(30000)
-                    testEnv = WitsEnv.WitsEnvCombined(k, sigma, actor, self.device)
-                    loss = testEnv.step_timesteps(100000)
+                    loss = testEnv.step_timesteps(100000, actor)
                     # test = WitsEnv.WitsActorTestCombined(actor, env, self.device)
                     # loss = test.test(100000)
                     while (loss < best_loss):
