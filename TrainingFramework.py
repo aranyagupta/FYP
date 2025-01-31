@@ -4,7 +4,6 @@ import CombinedKan
 import kan
 import torch
 import os
-import re
 
 class TrainingFramework:
     def __init__(self, KAN_hyps=[[1,2,2,1]], k_range=[0.05, 1.0, 0.05], sigma_range=[0.1, 7.1, 0.25], noiseless = False, store_models=True, store_loss=True):
@@ -30,9 +29,9 @@ class TrainingFramework:
     # if it does, return true
     def _check_exists(self, model_type, k, sigma, hyp):
         files = os.listdir('wits_models')
-        query_regex = f"{model_type}-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{hyp}*"
+        query = f"{model_type}-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{hyp}-c1_state"
         for file in files:
-            if re.match(query_regex, file):
+            if query==file:
                 return True
         return False
 
@@ -42,6 +41,7 @@ class TrainingFramework:
             for sigma in self.sigma_range:
                 testEnv = WitsEnv.WitsEnv(k, sigma, dims=1, device=self.device, mode='TEST')
                 for kan_hyp in self.KAN_hyps:
+                    print(f"TRAINING: DGD-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{kan_hyp}")
                     grid_range = [-3*sigma, 3*sigma]
                     grid = min(int(3*sigma+1), 11)
                     actor_c1 = kan.KAN(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)).item(), grid_range=grid_range, device=self.device)
