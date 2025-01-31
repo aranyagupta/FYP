@@ -3,7 +3,6 @@ import TrainingFramework
 from DataVis import *
 from SplineComposer import *
 import kan
-from itertools import product
 
 torch.autograd.set_detect_anomaly(True)
 

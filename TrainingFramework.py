@@ -3,6 +3,8 @@ import WitsPPO
 import CombinedKan
 import kan
 import torch
+import os
+import re
 
 class TrainingFramework:
     def __init__(self, KAN_hyps=[[1,2,2,1]], k_range=[0.05, 1.0, 0.05], sigma_range=[0.1, 7.1, 0.25], noiseless = False, store_models=True, store_loss=True):
@@ -24,9 +26,18 @@ class TrainingFramework:
             with open(f'./wits_models_loss/{model_type}-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{kan_hyp}.log', 'a') as file:
                 file.write(f"test cost: {cost.item()}\n")
     
+    # check if a model exists already in wits_models
+    # if it does, return true
+    def _check_exists(self, model_type, k, sigma, hyp):
+        files = os.listdir('wits_models')
+        query_regex = f"{model_type}-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{hyp}*"
+        for file in files:
+            if re.match(query_regex, file):
+                return True
+        return False
+
 
     def train_dgd(self):
-        
         for k in self.k_range:
             for sigma in self.sigma_range:
                 testEnv = WitsEnv.WitsEnv(k, sigma, dims=1, device=self.device, mode='TEST')
@@ -35,6 +46,12 @@ class TrainingFramework:
                     grid = min(int(3*sigma+1), 11)
                     actor_c1 = kan.KAN(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)).item(), grid_range=grid_range, device=self.device)
                     actor_c2 = kan.KAN(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)).item(), grid_range=grid_range, device=self.device)
+                    
+                    # skip training model if it already exists
+                    if self._check_exists('DGD', k, sigma, kan_hyp):
+                        print(f"SKIPPING: DGD-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{kan_hyp}, already exists")
+                        continue
+                        
                     env = WitsEnv.WitsEnv(k=k, sigma=sigma, dims=1, device=self.device)
 
                     gradDesc = WitsPPO.WitsGradDesc(env, actor_c1, actor_c2, noise=True)
