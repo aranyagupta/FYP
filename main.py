@@ -3,6 +3,9 @@ import TrainingFramework
 from DataVis import *
 from SplineComposer import *
 import kan
+import CombinedKan
+import WitsEnv
+import WitsPPO
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -13,6 +16,7 @@ torch.set_default_device(device=device)
 TRAIN_DGD = True
 TRAIN_PPO = False
 TRAIN_DGDCOMB = False
+TRAIN_ALTERNATING = False
 
 DISPLAY_HEATMAP = False
 DISPLAY_SYMBOLIC = False
@@ -36,11 +40,29 @@ if __name__ == "__main__":
 
     f = TrainingFramework.TrainingFramework(k_range=kvals, sigma_range=sigvals, KAN_hyps=kan_hyps)
     if TRAIN_DGD:
-        f.train_dgd()
+        kanType = kan.KAN
+        env = WitsEnv.WitsEnv
+        gradDesc = WitsPPO.WitsGradDesc
+        modelType = 'DGD'
+        f.train_framework(kanType, env, gradDesc, modelType)
     if TRAIN_PPO:
-        f.train_ppo()
+        kanType = CombinedKan.CombinedKan
+        env = WitsEnv.WitsEnvCombined
+        gradDesc = WitsPPO.WitsPPOCombined
+        modelType = 'PPO'
+        f.train_framework(kanType, env, gradDesc, modelType)
     if TRAIN_DGDCOMB:
-        f.train_dgd_combined()
+        kanType = CombinedKan.CombinedKan
+        env = WitsEnv.WitsEnvCombined
+        gradDesc = WitsPPO.WitsGradDescCombined
+        modelType = 'DGDCOMB'
+        f.train_framework(kanType, env, gradDesc, modelType)
+    if TRAIN_ALTERNATING:
+        kanType = kan.KAN
+        env = WitsEnv.WitsEnv
+        gradDesc = WitsPPO.WitsAlternatingDescent
+        modelType = "ALTERNATING"
+        f.train_framework(kanType, env, gradDesc, modelType)
 
     if DISPLAY_HEATMAP:
         kvals, sigvals, losses = getLosses(dgd=True, dgdcomb=False, ppo=False, hyps=[[1,0],[2,0],[2,0],[1,0]])
@@ -55,8 +77,8 @@ if __name__ == "__main__":
         create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title="DGD Model Costs")
     
     if DISPLAY_SYMBOLIC:
-        actor_c1 = kan.KAN.loadckpt("wits_models/DGD-k-0.30-sigma-4.35-hyps-[[1, 0], [2, 0], [2, 0], [1, 0]]-c1")
-        actor_c2 = kan.KAN.loadckpt("wits_models/DGD-k-0.30-sigma-4.35-hyps-[[1, 0], [2, 0], [2, 0], [1, 0]]-c2")
+        actor_c1 = kan.KAN.loadckpt("wits_models/DGD-k-0.05-sigma-2.50-hyps-[[1, 0], [2, 0], [2, 0], [2, 0], [1, 0]]-c1")
+        actor_c2 = kan.KAN.loadckpt("wits_models/DGD-k-0.05-sigma-2.50-hyps-[[1, 0], [2, 0], [2, 0], [2, 0], [1, 0]]-c2")
 
         act_fun_c1 = actor_c1.act_fun
         act_fun_c2 = actor_c2.act_fun

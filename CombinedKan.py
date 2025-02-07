@@ -3,11 +3,11 @@ import torch
 import torch.nn as nn 
 
 class CombinedKan(nn.Module):
-    def __init__(self, kan_hyps, grid, k, grid_range, device, noise=True):
+    def __init__(self, kan_hyps, grid, k, seed, grid_range, device, noise=True):
         super(CombinedKan, self).__init__()
         self.device = device
-        self.actor_c1 = kan.KAN(width=kan_hyps, grid=grid, k=k, seed=torch.randint(low=0, high=2025, size=(1,1)), grid_range=grid_range, device=device)
-        self.actor_c2 = kan.KAN(width=kan_hyps, grid=grid, k=k, seed=torch.randint(low=0, high=2025, size=(1,1)), grid_range=grid_range, device=device)
+        self.actor_c1 = kan.KAN(width=kan_hyps, grid=grid, k=k, seed=seed, grid_range=grid_range, device=device)
+        self.actor_c2 = kan.KAN(width=kan_hyps, grid=grid, k=k, seed=seed, grid_range=grid_range, device=device)
         self.noise = noise
     
 

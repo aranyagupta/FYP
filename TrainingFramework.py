@@ -35,6 +35,38 @@ class TrainingFramework:
                 return True
         return False
 
+    def train_framework(self, kanType, env, gradDesc, modelType):
+        for k in self.k_range:
+            for sigma in self.sigma_range:
+                testEnv = env(k, sigma, dims=1, device=self.device, mode='TEST')
+                for kan_hyp in self.KAN_hyps:
+                    print(f"TRAINING: {modelType}-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{kan_hyp}")
+                    grid_range = [-3*sigma, 3*sigma]
+                    grid = min(int(3*sigma+1), 11)
+                    actor_c1 = kanType(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)).item(), grid_range=grid_range, device=self.device)
+                    actor_c2 = kanType(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)).item(), grid_range=grid_range, device=self.device)
+                    if self._check_exists(modelType, k, sigma, kan_hyp):
+                        print(f"SKIPPING: {modelType}-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{kan_hyp}, already exists")
+                        continue
+                    
+                    trainEnv = env(k, sigma, dims=1, mode='TRAIN', device=self.device)
+                    alg = gradDesc(trainEnv, actor_c1, actor_c2)
+                    
+                    best_loss = 1e7
+                    alg.train(1000, 500)
+                    
+                    loss = testEnv.step_timesteps(actor_c1, actor_c2, 100000)
+                    print("TEST LOSS:", loss)
+
+                    while (loss < best_loss):
+                        self._store_actors(modelType, actor_c1, actor_c2, k, sigma, kan_hyp)
+                        self._store_loss(modelType, loss, k, sigma, kan_hyp)
+                        
+                        best_loss = loss
+                        alg.train(1000, 100)
+                        loss = testEnv.step_timesteps(actor_c1, actor_c2, 100000)
+
+
 
     def train_dgd(self):
         for k in self.k_range:
@@ -60,6 +92,7 @@ class TrainingFramework:
                     gradDesc.train(1000, 1000)
                     
                     loss = testEnv.step_timesteps(actor_c1, actor_c2, 100000)
+                    print("TEST LOSS:", loss)
 
                     while (loss < best_loss):
                         self._store_actors("DGD", actor_c1, actor_c2, k, sigma, kan_hyp)
@@ -76,7 +109,7 @@ class TrainingFramework:
                 for kan_hyp in self.KAN_hyps:
                     grid_range = [-3*sigma, 3*sigma]
                     grid = min(int(3*sigma+1), 11)
-                    actor = CombinedKan.CombinedKan(kan_hyp, grid, 3, grid_range, self.device, noise=True)
+                    actor = CombinedKan.CombinedKan(kan_hyp, grid, 3, torch.randint(low=0, high=2025, size=(1,1)), grid_range, self.device, noise=True)
                     env = WitsEnv.WitsEnvCombined(k, sigma, actor, self.device)
 
                     gradDesc = WitsPPO.WitsGradDescCombined(env, actor)
@@ -101,7 +134,7 @@ class TrainingFramework:
                 for kan_hyp in self.KAN_hyps:
                     grid_range = [-3*sigma, 3*sigma]
                     grid = min(int(3*sigma+1), 11)
-                    actor = CombinedKan.CombinedKan(kan_hyp, grid, 3, grid_range, self.device, noise=True)
+                    actor = CombinedKan.CombinedKan(kan_hyp, grid, 3, torch.randint(low=0, high=2025, size=(1,1)), grid_range, self.device)
                     critic = kan.KAN(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)), grid_range=grid_range, device=self.device)
                     env = WitsEnv.WitsEnvCombined(k, sigma, self.device)
 

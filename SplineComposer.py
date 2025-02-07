@@ -46,8 +46,8 @@ def symbolic_b_splines_sum(coef, k, knots):
     # Construct the symbolic sum of B-splines weighted by coefficients
     spline_sum = sum(coef[i] * b_spline_basis(i, k, t, knots) for i in range(num_b_splines))
 
-    # return sp.simplify(spline_sum)
-    return spline_sum
+    return sp.simplify(spline_sum)
+    # return spline_sum
 
 
 # Composes kan layers found in actor.act_fun into one symbolic function
@@ -66,7 +66,7 @@ def compose_kanlayers(act_fun):
                 func = layer.scale_sp[i, j]*func + layer.scale_base[i, j] * t/(1+sp.exp(-t))
                 out_funcs[j] += func.subs({"t":initial_funcs[i]})
         initial_funcs = out_funcs
-
+    assert len(initial_funcs) == 1, "initial_funcs does not have length 1, something went wrong"
     return initial_funcs[0]
 
 # Plots and returns individual kan layers functions found in actor.act_fun

@@ -59,19 +59,20 @@ class WitsEnv():
         return obs_c1, obs_c2, reward, terminated, truncated
 
 class WitsEnvCombined:
-    def __init__(self, k, sigma, device, mode='TRAIN'):
+    def __init__(self, k, sigma, dims, device, mode='TRAIN'):
         torch.set_default_dtype(torch.float64)
         
         self.k = k
         self.sigma = sigma
         self.device = device
         self.mode = mode
+        self.dims = dims
 
         if self.mode == 'TEST':
             self.x = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
             self.noise = torch.normal(0, 1, (100000, self.dims), device=self.device)
 
-    def step_timesteps(self, timesteps, actor_combined):
+    def step_timesteps(self, actor_combined, actor_combined_second, timesteps, noise=True):
         if self.mode=='TEST':
             with torch.no_grad():
                 u_1, y_2, u_2 = actor_combined(self.x, noise_data=self.noise)

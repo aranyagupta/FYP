@@ -29,7 +29,7 @@ class WitsGradDesc:
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
-		self.lr = 0.005
+		self.lr = 0.01
 		self.noise = noise
 
 		self.actor_c1_optim = Adam(self.actor_c1.parameters(), lr=self.lr)
@@ -56,7 +56,7 @@ class WitsPPOCombined:
 	"""
 		This is the PPO class we will use as our model in main.py
 	"""
-	def __init__(self, actor, critic, env, **hyperparameters):
+	def __init__(self, env, actor_combined, actor_combined2, **hyperparameters):
 		"""
 			Initializes the PPO model, including hyperparameters.
 
@@ -79,8 +79,9 @@ class WitsPPOCombined:
 		self.act_dim = 1
 
 		 # Initialize actor and critic networks
-		self.actor = actor                                           # ALG STEP 1
-		self.critic = critic
+		self.actor = actor_combined                                           # ALG STEP 1
+		self.critic = kan.KAN()
+		self.critic.initialize_from_another_model(actor_combined)
 
 		# Initialize optimizers for actor and critic
 		self.actor_optim = Adam(self.actor.parameters(), lr=self.lr)
@@ -92,16 +93,18 @@ class WitsPPOCombined:
 
 		
 
-	def learn(self, total_timesteps):
+	def train(self, timesteps, batches):
 		"""
 			Train the actor and critic networks. Here is where the main PPO algorithm resides.
 
 			Parameters:
-				total_timesteps - the total number of timesteps to train for
+				batches - the number of batches to train for
+				timesteps - the number of timesteps to train for
 
 			Return:
 				None
 		"""
+		total_timesteps = batches*timesteps
 		print(f"Learning... Running {self.max_timesteps_per_episode} timesteps per episode, ", end='')
 		print(f"{self.timesteps_per_batch} timesteps per batch for a total of {total_timesteps} timesteps")
 		t_so_far = 0 # Timesteps simulated so far
@@ -345,7 +348,7 @@ class WitsPPOCombined:
 
 
 class WitsGradDescCombined:
-	def __init__(self, env, actor_combined):
+	def __init__(self, env, actor_combined, actor_combined2):
 		self.env = env
 		self.actor = actor_combined
 		self.lr = 0.005
@@ -364,3 +367,37 @@ class WitsGradDescCombined:
 			self.actor_optim.zero_grad()
 			actor_loss.backward()
 			self.actor_optim.step()
+
+class WitsAlternatingDescent:
+	def __init__(self, env, actor_c1, actor_c2, noise=True):
+		self.env = env
+		self.actor_c1 = actor_c1
+		self.actor_c2 = actor_c2
+		self.lr = 0.01
+		self.noise = noise
+
+		self.actor_c1_optim = Adam(self.actor_c1.parameters(), lr=self.lr)
+		self.actor_c2_optim = Adam(self.actor_c2.parameters(), lr=self.lr)
+	
+	def train(self, timesteps, batches, n_repeats=1):
+		for batch in range(batches):
+			for n in range(n_repeats):
+				_, _, reward, _, _ = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps, noise=self.noise)
+				reward = -reward
+				
+				actor_loss = reward.mean()
+				print("ALTERNATING LOSS:", actor_loss)
+
+				self.actor_c2_optim.zero_grad()
+				actor_loss.backward()
+				self.actor_c2_optim.step()
+			
+			for n in range(n_repeats):
+				_, _, reward, _, _ = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps, noise=self.noise)
+				reward = -reward
+				actor_loss = reward.mean()
+				self.actor_c1_optim.zero_grad()
+				actor_loss.backward()
+				self.actor_c1_optim.step()
+				print("ALTERNATING LOSS:", actor_loss)
+				
