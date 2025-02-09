@@ -44,10 +44,10 @@ class TrainingFramework:
         return False
 
     def train_framework(self, kanType, env, gradDesc, modelType):
-        for k in self.k_range:
-            for sigma in self.sigma_range:
-                testEnv = env(k, sigma, dims=1, device=self.device, mode='TEST')
-                for kan_hyp in self.KAN_hyps:
+        for kan_hyp in self.KAN_hyps:
+            for k in self.k_range:
+                for sigma in self.sigma_range:
+                    testEnv = env(k, sigma, dims=1, device=self.device, mode='TEST')
                     print(f"TRAINING: {modelType}-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{kan_hyp}")
                     grid_range = [-3*sigma, 3*sigma]
                     grid = min(int(3*sigma+1), 11)
