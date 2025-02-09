@@ -7,8 +7,16 @@ import os
 
 class TrainingFramework:
     def __init__(self, KAN_hyps=[[1,2,2,1]], k_range=[0.05, 1.0, 0.05], sigma_range=[0.1, 7.1, 0.25], noiseless = False, store_models=True, store_loss=True):
-        self.k_range = [k_range[0]+i*k_range[2] for i in range(int( (k_range[1]-k_range[0]) / k_range[2])+1)]
-        self.sigma_range = [sigma_range[0]+i*sigma_range[2] for i in range(int( (sigma_range[1]-sigma_range[0]) / sigma_range[2])+1)]
+        if len(k_range)==3:
+            self.k_range = [k_range[0]+i*k_range[2] for i in range(int( (k_range[1]-k_range[0]) / k_range[2])+1)]
+        else:
+            self.k_range = k_range
+        
+        if len(sigma_range)==3:
+            self.sigma_range = [sigma_range[0]+i*sigma_range[2] for i in range(int( (sigma_range[1]-sigma_range[0]) / sigma_range[2])+1)]
+        else:
+            self.sigma_range = sigma_range
+        
         self.KAN_hyps = KAN_hyps
         self.store_models = store_models
         self.store_loss = store_loss
