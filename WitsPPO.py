@@ -36,6 +36,7 @@ class WitsGradDesc:
 		self.actor_c2_optim = Adam(self.actor_c2.parameters(), lr=self.lr)
 
 	def train(self, timesteps, batches):
+		start = time.time()
 		for batch in range(batches):
 			# print("batch:", batch)
 			_, _, reward, _, _ = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps, noise=self.noise)
@@ -49,6 +50,7 @@ class WitsGradDesc:
 			actor_loss.backward()
 			self.actor_c2_optim.step()
 			self.actor_c1_optim.step()
+		print("TOOK", time.time()-start, "seconds to finish.")
 			
 
 
