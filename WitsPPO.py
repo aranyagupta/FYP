@@ -52,7 +52,57 @@ class WitsGradDesc:
 			self.actor_c1_optim.step()
 		print("TOOK", time.time()-start, "seconds to finish.")
 			
+class WitsGradDescConstrained:
+	def __init__(self, env, actor_c1, actor_c2, noise=True):
+		self.env = env
+		self.actor_c1 = actor_c1
+		self.actor_c2 = actor_c2
+		self.lr = 0.01
+		self.noise = noise
 
+		self.mu_0 = torch.tensor(1.0, requires_grad=True, device=actor_c1.device)
+		self.mu_1 = torch.tensor(1.0, requires_grad=True, device=actor_c1.device)
+
+		self.actor_c1_optim = Adam(self.actor_c1.parameters(), lr=self.lr)
+		self.actor_c2_optim = Adam(self.actor_c2.parameters(), lr=self.lr)
+		self.mu_0_optim = Adam([self.mu_0], lr=self.lr)
+		self.mu_1_optim = Adam([self.mu_1], lr=self.lr)
+
+	def train(self, timesteps, batches):
+		start = time.time()
+		for batch in range(batches):
+			# print("batch:", batch)
+			_, _, reward, _, _ = self.env.step_timesteps(self.actor_c1, self.actor_c2, self.mu_0, self.mu_1, timesteps, noise=self.noise)
+			
+			actor_loss = reward.mean()
+			print("LAG LOSS:",actor_loss)
+			print("mu:", self.mu_0, self.mu_1)
+
+			self.actor_c1_optim.zero_grad()
+			self.actor_c2_optim.zero_grad()
+			self.mu_0_optim.zero_grad()
+			self.mu_1_optim.zero_grad()
+
+			actor_loss.backward()
+
+
+			# gradient ascent for lagrangian multipliers
+			with torch.no_grad():
+				self.mu_0.grad *= -1 
+				self.mu_1.grad *= -1 
+			
+			self.mu_0_optim.step()
+			self.mu_1_optim.step()
+
+			# clamp langrangian multipliers to be >=0
+			with torch.no_grad():
+				self.mu_0.clamp_(min=0)
+				self.mu_1.clamp_(min=0)
+			
+			# gradient descent for model (minimise J)
+			self.actor_c2_optim.step()
+			self.actor_c1_optim.step()
+		print("TOOK", time.time()-start, "seconds to finish.")
 
 class WitsPPOCombined:
 	"""

@@ -58,6 +58,66 @@ class WitsEnv():
         # obs for c1, obs for c2, act for c1, act for c2, reward, termination or truncation
         return obs_c1, obs_c2, reward, terminated, truncated
 
+class WitsEnvConstrained:
+    '''
+        Initialises a Witsenhausen Counterexample environment with constrained loss
+        k: Witsenhausen cost parameter
+        sigma: standard dev of x_0
+        dims: dimension of environment (system state variables)
+    '''
+    def __init__(self, k, sigma, dims, device, mode='TRAIN'):
+        torch.set_default_dtype(torch.float64)
+        
+        self.k = k
+        self.sigma = sigma
+        self.dims = dims
+        self.device = device
+        self.mode = mode
+        self.epsilon = 1e-1
+
+        if mode == 'TEST':
+            self.x_0 = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
+            self.noise = torch.normal(0, 1, (100000, self.dims), device=self.device)
+    
+    def step_timesteps(self, actor_c1, actor_c2, mu_0=0, mu_1=0, timesteps=1000000, noise=True):
+        if self.mode == 'TEST':
+            with torch.no_grad():
+                u_1 = actor_c1(self.x_0)
+                y_1 = u_1 + noise*self.noise
+                u_2 = actor_c2(y_1)
+                reward = (self.k**2 * (self.x_0 - u_1)**2 + (u_2-u_1)**2)
+                return reward.mean()
+        
+        self.x_0 = torch.normal(0, self.sigma, (timesteps,self.dims), device=self.device)
+        u_1 = actor_c1(self.x_0)
+        self.x_1 = u_1
+        
+        y_1 = self.x_1 + noise*torch.normal(0, 1, (timesteps,self.dims), device=self.device)
+        u_2 = actor_c2(y_1)
+        self.x_2 = u_2
+        
+
+        terminated = False
+        truncated = False
+
+        first_linear_gradient = (torch.transpose(self.x_0, 0, 1) @ self.x_1)/((torch.transpose(self.x_0, 0, 1) @ self.x_0) + 1e-8)
+        second_linear_gradient = (torch.transpose(y_1, 0, 1) @ self.x_2)/((torch.transpose(y_1, 0, 1) @ y_1) + 1e-8) 
+        f_x = (self.k**2 * (self.x_0 - self.x_1)**2 + (self.x_2-self.x_1)**2).mean()
+        g_0_x = (self.epsilon - (self.x_1 - first_linear_gradient*self.x_0)**2).mean()
+        g_1_x = (self.epsilon - (self.x_2 - second_linear_gradient*y_1)**2).mean()
+        print("f_x:", f_x)
+        print("g_0_x:", g_0_x)
+        print("g_1_x:", g_1_x)
+        print("gradients:", first_linear_gradient, second_linear_gradient)
+        reward = (self.k**2 * (self.x_0 - self.x_1)**2 + (self.x_2-self.x_1)**2) + mu_0 * (self.epsilon - (self.x_1 - first_linear_gradient*self.x_0)**2) + mu_1 * (self.epsilon - (self.x_2 - second_linear_gradient*y_1)**2)
+
+        act_c1 = self.x_1
+        act_c2 = self.x_2 
+        obs_c1 = self.x_0
+        obs_c2 = y_1 
+        # obs for c1, obs for c2, act for c1, act for c2, reward, termination or truncation
+        return obs_c1, obs_c2, reward, terminated, truncated
+
 class WitsEnvCombined:
     def __init__(self, k, sigma, dims, device, mode='TRAIN'):
         torch.set_default_dtype(torch.float64)

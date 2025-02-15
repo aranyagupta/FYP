@@ -50,8 +50,8 @@ def create_heatmap(x_values, y_values, z_values, cmap='viridis', title="Heatmap"
                aspect='auto')
     plt.colorbar(label='Test Cost')
     plt.title(title)
-    plt.xlabel('k')
-    plt.ylabel('sigma')
+    plt.xlabel('k^2')
+    plt.ylabel('sigma^2')
     plt.show()
 
 def generateLookupTable(kvals, sigvals, losses):
