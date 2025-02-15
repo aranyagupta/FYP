@@ -173,3 +173,5 @@ model/
 figures/
 papers/
 report_figures/
+wits_models_loss_storage/
+wits_models_storage/
