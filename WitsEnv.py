@@ -73,7 +73,7 @@ class WitsEnvConstrained:
         self.dims = dims
         self.device = device
         self.mode = mode
-        self.epsilon = 1
+        self.epsilon = 10
 
         if mode == 'TEST':
             self.x_0 = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
