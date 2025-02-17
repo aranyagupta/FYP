@@ -79,7 +79,7 @@ class WitsEnvConstrained:
             self.x_0 = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
             self.noise = torch.normal(0, 1, (100000, self.dims), device=self.device)
     
-    def step_timesteps(self, actor_c1, actor_c2, mu_0=0, mu_1=0, timesteps=1000000, noise=True):
+    def step_timesteps(self, actor_c1, actor_c2, lamb_0=0, lamb_1=0, mu_0=0, mu_1=0, timesteps=1000000, noise=True):
         if self.mode == 'TEST':
             with torch.no_grad():
                 u_1 = actor_c1(self.x_0)
@@ -102,17 +102,14 @@ class WitsEnvConstrained:
 
         first_linear_gradient = (torch.transpose(self.x_0, 0, 1) @ self.x_1)/((torch.transpose(self.x_0, 0, 1) @ self.x_0) + 1e-8)
         second_linear_gradient = (torch.transpose(y_1, 0, 1) @ self.x_2)/((torch.transpose(y_1, 0, 1) @ y_1) + 1e-8) 
-        f_x = (self.k**2 * (self.x_0 - self.x_1)**2 + (self.x_2-self.x_1)**2).mean()
-        g_0_x = (self.epsilon - (self.x_1 - first_linear_gradient*self.x_0)**2).mean()
-        g_1_x = (self.epsilon - (self.x_2 - second_linear_gradient*y_1)**2).mean()
-        print("f_x:", f_x)
-        print("g_0_x:", g_0_x)
-        print("g_1_x:", g_1_x)
-        print("gradients:", first_linear_gradient, second_linear_gradient)
-        reward = (self.k**2 * (self.x_0 - self.x_1)**2 + (self.x_2-self.x_1)**2) + mu_0 * (self.epsilon - (self.x_1 - first_linear_gradient*self.x_0)**2) + mu_1 * (self.epsilon - (self.x_2 - second_linear_gradient*y_1)**2)
+        f_x = (self.k**2 * (self.x_0 - self.x_1)**2 + (self.x_2-self.x_1)**2)
+        h_0_x = (actor_c1(-self.x_0) + self.x_1)
+        h_1_x = (actor_c2(-y_1) + self.x_2)
+        g_0_x = (self.epsilon - (self.x_1 - first_linear_gradient*self.x_0)**2)
+        g_1_x = (self.epsilon - (self.x_2 - second_linear_gradient*y_1)**2)
+        print("f_x:", f_x.mean())
+        reward = f_x + lamb_0 * h_0_x + lamb_1 * h_1_x + mu_0 * g_0_x + mu_1 * g_1_x
 
-        act_c1 = self.x_1
-        act_c2 = self.x_2 
         obs_c1 = self.x_0
         obs_c2 = y_1 
         # obs for c1, obs for c2, act for c1, act for c2, reward, termination or truncation

@@ -60,6 +60,8 @@ class WitsGradDescConstrained:
 		self.lr = 0.01
 		self.noise = noise
 
+		self.lamb_0 = torch.tensor(1.0, requires_grad=True, device = actor_c1.device)
+		self.lamb_1 = torch.tensor(1.0, requires_grad=True, device = actor_c1.device)
 		self.mu_0 = torch.tensor(1.0, requires_grad=True, device=actor_c1.device)
 		self.mu_1 = torch.tensor(1.0, requires_grad=True, device=actor_c1.device)
 
@@ -67,21 +69,24 @@ class WitsGradDescConstrained:
 		self.actor_c2_optim = Adam(self.actor_c2.parameters(), lr=self.lr)
 		self.mu_0_optim = Adam([self.mu_0], lr=self.lr)
 		self.mu_1_optim = Adam([self.mu_1], lr=self.lr)
+		self.lamb_0_optim = Adam([self.lamb_0], lr=self.lr)
+		self.lamb_1_optim = Adam([self.lamb_1], lr=self.lr)
 
 	def train(self, timesteps, batches):
 		start = time.time()
 		for batch in range(batches):
 			# print("batch:", batch)
-			_, _, reward, _, _ = self.env.step_timesteps(self.actor_c1, self.actor_c2, self.mu_0, self.mu_1, timesteps, noise=self.noise)
+			_, _, reward, _, _ = self.env.step_timesteps(self.actor_c1, self.actor_c2, self.lamb_0, self.lamb_1, self.mu_0, self.mu_1, timesteps, noise=self.noise)
 			
 			actor_loss = reward.mean()
 			print("LAG LOSS:",actor_loss)
-			print("mu:", self.mu_0, self.mu_1)
 
 			self.actor_c1_optim.zero_grad()
 			self.actor_c2_optim.zero_grad()
 			self.mu_0_optim.zero_grad()
 			self.mu_1_optim.zero_grad()
+			self.lamb_0_optim.zero_grad()
+			self.lamb_1_optim.zero_grad()
 
 			actor_loss.backward()
 
@@ -90,11 +95,15 @@ class WitsGradDescConstrained:
 			with torch.no_grad():
 				self.mu_0.grad *= -1 
 				self.mu_1.grad *= -1 
+				self.lamb_0.grad *= -1
+				self.lamb_1.grad *= -1
 			
 			self.mu_0_optim.step()
 			self.mu_1_optim.step()
+			self.lamb_0_optim.step()
+			self.lamb_1_optim.step()
 
-			# clamp langrangian multipliers to be >=0
+			# clamp mu multipliers to be >=0 (as they are inequality constraints)
 			with torch.no_grad():
 				self.mu_0.clamp_(min=0)
 				self.mu_1.clamp_(min=0)

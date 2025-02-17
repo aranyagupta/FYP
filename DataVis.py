@@ -2,20 +2,22 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 
-def get_loss_from_file(filename, models_loss_dir="./wits_models_loss/"):
+def get_loss_from_file(filename, models_loss_dir="./wits_models_loss_storage/"):
     file = open(models_loss_dir+filename)
     loss_text = file.readlines()[-1]
     loss_text = float(loss_text[11:])
     return loss_text
 
-def getLosses(dgd=True, dgdcomb=False, ppo=False, hyps=[[1,0],[2,0],[2,0],[1,0]]):
-    files = os.listdir("./wits_models_loss")
+def getLosses(dgd=True, dgdcomb=False, ppo=False, lag=False, hyps=[[1,0],[2,0],[2,0],[1,0]]):
+    files = os.listdir("./wits_models_loss_storage")
     if not dgdcomb:
         files = [x for x in files if x[:7]!="DGDCOMB"]
     if not dgd:
         files = [x for x in files if x[:3]!="DGD"]
     if not ppo:
         files = [x for x in files if x[:3]!="PPO"]
+    if not lag:
+        files = [x for x in files if x[:3]!="LAG"]
 
     files = [file for file in files if str(hyps) in file]
 

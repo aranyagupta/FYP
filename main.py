@@ -72,8 +72,8 @@ if __name__ == "__main__":
         f.train_framework(kanType, env, gradDesc, modelType)
 
     if DISPLAY_HEATMAP:
-        hyps =  [[1,0],[5,0],[5,0],[5,0],[5,0],[5,0],[1,0]]
-        kvals, sigvals, losses = getLosses(dgd=True, dgdcomb=False, ppo=False, hyps=hyps)
+        hyps =  [[1,0],[4,0],[4,0],[4,0],[4,0],[4,0],[1,0]]
+        kvals, sigvals, losses = getLosses(dgd=False, dgdcomb=False, ppo=False, lag=True, hyps=hyps)
 
         kvals_squared = [round(k**2/0.05)*0.05 for k in kvals]
         varvals = [round(s**2/5.0)*5.0 for s in sigvals]
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title=f"DGD {[x[0] for x in hyps]} Model Costs")
     
     if DISPLAY_SYMBOLIC:
-        hyps = [[1,0],[5,0],[5,0],[5,0],[5,0],[5,0],[1,0]]
+        hyps = [[1,0],[4,0],[4,0],[4,0],[4,0],[4,0],[1,0]]
 
         # LINEAR (UNINTENTIONAL - SHOULD BE 3-STEP)
         # k = 0.22
@@ -99,31 +99,23 @@ if __name__ == "__main__":
         k = 0.55
         sigma = 5.92
 
+        modelType = 'LAG'
         
 
-        actor_c1 = kan.KAN.loadckpt(f"wits_models/DGD-k-{k}-sigma-{sigma}-hyps-{hyps}-c1")
-        actor_c2 = kan.KAN.loadckpt(f"wits_models/DGD-k-{k}-sigma-{sigma}-hyps-{hyps}-c2")
+        actor_c1 = kan.KAN.loadckpt(f"wits_models_storage/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-c1")
+        actor_c2 = kan.KAN.loadckpt(f"wits_models_storage/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-c2")
         act_fun_c1 = actor_c1.act_fun
         act_fun_c2 = actor_c2.act_fun
         
         if PLOT_GRAPHS:
-            actor_c1.plot()
-            plt.show()
-            actor_c2.plot()
-            plt.show()
+            # actor_c1.plot()
+            # plt.show()
+            # actor_c2.plot()
+            # plt.show()
         
             plot_model_bruteforce(actor_c1, device=device, controller=1)
             plot_model_bruteforce(actor_c2, device=device, controller=2)
 
-
-        if PLOT_GRAPHS:
-            actor_c1.plot()
-            plt.show()
-            actor_c2.plot()
-            plt.show()
-            
-            plot_model_bruteforce(actor_c1, device=device)
-            plot_model_bruteforce(actor_c2, device=device)
 
         # individual_functions_c1 = individual_kanlayers(act_fun_c1)
         # individual_functions_c2 = individual_kanlayers(act_fun_c2)
