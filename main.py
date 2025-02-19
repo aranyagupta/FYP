@@ -25,8 +25,8 @@ DISPLAY_SYMBOLIC = False
 PLOT_GRAPHS = False
 
 if __name__ == "__main__":
-    min_hidden_layers = 5
-    max_hidden_layers = 10
+    min_hidden_layers = 4
+    max_hidden_layers = 9
     min_layer_width = 4
     max_layer_width = 8
 

@@ -51,7 +51,7 @@ class TrainingFramework:
         dataset['train_label'] = dataset['train_label'].to(self.device)
         dataset['test_input'] = dataset['test_input'].to(self.device)
         dataset['test_label'] = dataset['test_label'].to(self.device)
-        model.fit(dataset, opt="LBFGS", steps=200, lamb=0.001)
+        model.fit(dataset, opt="LBFGS", steps=100, lamb=0.001)
 
 
     def train_framework(self, kanType, env, gradDesc, modelType, prefit_func=lambda x : x):
@@ -70,7 +70,8 @@ class TrainingFramework:
                     
                     if prefit_func is not None:
                         self._prefit_to(actor_c1, prefit_func, grid_range=grid_range)
-                        self._prefit_to(actor_c2, prefit_func, grid_range=grid_range)
+                        x = torch.randn(100, 1)
+                        actor_c2.initialize_from_another_model(actor_c1, x)
                     
                     trainEnv = env(k, sigma, dims=1, mode='TRAIN', device=self.device)
                     alg = gradDesc(trainEnv, actor_c1, actor_c2)
