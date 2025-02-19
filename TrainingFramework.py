@@ -51,7 +51,7 @@ class TrainingFramework:
         dataset['train_label'] = dataset['train_label'].to(self.device)
         dataset['test_input'] = dataset['test_input'].to(self.device)
         dataset['test_label'] = dataset['test_label'].to(self.device)
-        model.fit(dataset, opt="LBFGS", steps=50, lamb=0.001)
+        model.fit(dataset, opt="LBFGS", steps=100, lamb=0.)
 
 
     def train_framework(self, kanType, env, gradDesc, modelType, prefit_func=lambda x : x):
