@@ -42,8 +42,15 @@ class TrainingFramework:
             if query==file:
                 return True
         return False
+    
+    # prefit model to initial function 
+    def _prefit_to(self, model, function):
+        assert isinstance(model, kan.KAN), "Model is not default kan, cannot prefit"
+        dataset = kan.utils.create_dataset(function, n_var=1, device=self.device)
+        model.fit(dataset, opt="LBFGS", steps=100, lamb=0.001)
 
-    def train_framework(self, kanType, env, gradDesc, modelType):
+
+    def train_framework(self, kanType, env, gradDesc, modelType, prefit_func=lambda x : x):
         for kan_hyp in self.KAN_hyps:
             for k in self.k_range:
                 for sigma in self.sigma_range:
@@ -56,6 +63,10 @@ class TrainingFramework:
                     if self._check_exists(modelType, k, sigma, kan_hyp):
                         print(f"SKIPPING: {modelType}-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{kan_hyp}, already exists")
                         continue
+                    
+                    if prefit_func is not None:
+                        self._prefit_to(actor_c1, prefit_func)
+                        self._prefit_to(actor_c2, prefit_func)
                     
                     trainEnv = env(k, sigma, dims=1, mode='TRAIN', device=self.device)
                     alg = gradDesc(trainEnv, actor_c1, actor_c2)

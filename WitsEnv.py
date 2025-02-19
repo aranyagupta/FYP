@@ -65,7 +65,7 @@ class WitsEnvConstrained:
         sigma: standard dev of x_0
         dims: dimension of environment (system state variables)
     '''
-    def __init__(self, k, sigma, dims, device, mode='TRAIN', constrain_odd = False, constrain_nonaffine = True):
+    def __init__(self, k, sigma, dims, device, mode='TRAIN', constrain_odd = False, constrain_nonlinear=True, constrain_nonaffine = False):
         torch.set_default_dtype(torch.float64)
         
         self.k = k
@@ -76,6 +76,7 @@ class WitsEnvConstrained:
         self.epsilon = 1
         self.constrain_odd = constrain_odd
         self.constrain_nonaffine = constrain_nonaffine
+        self.constrain_nonlinear = constrain_nonlinear
 
         if mode == 'TEST':
             self.x_0 = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
@@ -101,6 +102,10 @@ class WitsEnvConstrained:
 
         terminated = False
         truncated = False
+
+        if self.constrain_nonlinear:
+            first_linear_gradient = (torch.transpose(self.x_0, 0, 1) @ self.x_1)/(torch.transpose(self.x_0, 0, 1) @ self.x_0 + 1e-8) 
+            second_linear_gradient = (torch.transpose(y_1, 0, 1) @ self.x_2)/(torch.transpose(y_1, 0, 1) @ y_1 + 1e-8) 
 
         if self.constrain_nonaffine:
             N = self.x_0.size(0)
@@ -129,6 +134,10 @@ class WitsEnvConstrained:
         if self.constrain_odd:
             h_0_x = (actor_c1(-self.x_0) + self.x_1)
             h_1_x = (actor_c2(-y_1) + self.x_2)
+        
+        if self.constrain_nonlinear:
+            g_0_x = (self.epsilon - (self.x_1 - (first_linear_gradient*self.x_0))**2)
+            g_1_x = (self.epsilon - (self.x_2 - (second_linear_gradient*y_1))**2)
         
         if self.constrain_nonaffine:
             g_0_x = (self.epsilon - (self.x_1 - (first_affine_gradient*self.x_0 + first_affine_intercept))**2)
