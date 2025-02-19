@@ -46,11 +46,16 @@ class TrainingFramework:
     # prefit model to initial function 
     def _prefit_to(self, model, function, grid_range=[-20.0, 20.0]):
         assert isinstance(model, kan.KAN), "Model is not default kan, cannot prefit"
-        dataset = kan.utils.create_dataset(function, n_var=1, device=self.device, ranges=grid_range)
-        dataset['train_input'] = dataset['train_input'].to(self.device)
-        dataset['train_label'] = dataset['train_label'].to(self.device)
-        dataset['test_input'] = dataset['test_input'].to(self.device)
-        dataset['test_label'] = dataset['test_label'].to(self.device)
+        dataset = {
+            'train_input':[],
+            'train_label':[],
+            'test_input':[],
+            'test_label':[],
+        }
+        dataset['train_input'] = torch.arange(grid_range[0], grid_range[1], (grid_range[1]-grid_range[0])/10000.0).reshape(10000, 1).to(self.device)
+        dataset['train_label'] = function(dataset['train_input'])
+        dataset['test_input'] = torch.arange(grid_range[0], grid_range[1], (grid_range[1]-grid_range[0])/10000.0).reshape(10000, 1).to(self.device)
+        dataset['test_label'] = function(dataset['test_input'])
         model.fit(dataset, opt="LBFGS", steps=100, lamb=0.)
 
 
