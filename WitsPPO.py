@@ -80,6 +80,8 @@ class WitsGradDescConstrained:
 			
 			actor_loss = reward.mean()
 			print("LAG LOSS:",actor_loss)
+			print("lambda:", self.lamb_0.item(), self.lamb_1.item())
+			print("mu:", self.mu_0.item(), self.mu_1.item())
 
 			self.actor_c1_optim.zero_grad()
 			self.actor_c2_optim.zero_grad()

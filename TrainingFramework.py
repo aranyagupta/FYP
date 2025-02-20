@@ -61,22 +61,23 @@ class TrainingFramework:
 
     def train_framework(self, kanType, env, gradDesc, modelType, prefit_func=lambda x : x):
         for kan_hyp in self.KAN_hyps:
-            for k in self.k_range:
-                for sigma in self.sigma_range:
+            for sigma in self.sigma_range:
+                grid_range = [-3*sigma, 3*sigma]
+                grid = min(int(3*sigma+1), 11)
+                prefit_model = kanType(width=kan_hyp, grid=grid, k=3, seed=42, grid_range=grid_range, device=self.device)
+                if prefit_func is not None:
+                    self._prefit_to(prefit_model, prefit_func, grid_range=grid_range)
+                for k in self.k_range:
                     testEnv = env(k, sigma, dims=1, device=self.device, mode='TEST')
                     print(f"TRAINING: {modelType}-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{kan_hyp}")
-                    grid_range = [-3*sigma, 3*sigma]
-                    grid = min(int(3*sigma+1), 11)
-                    actor_c1 = kanType(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)).item(), grid_range=grid_range, device=self.device)
-                    actor_c2 = kanType(width=kan_hyp, grid=grid, k=3, seed=torch.randint(low=0, high=2025, size=(1,1)).item(), grid_range=grid_range, device=self.device)
+                    actor_c1 = kanType(width=kan_hyp, grid=grid, k=3, seed=42, grid_range=grid_range, device=self.device)
+                    actor_c2 = kanType(width=kan_hyp, grid=grid, k=3, seed=42, grid_range=grid_range, device=self.device)
                     if self._check_exists(modelType, k, sigma, kan_hyp):
                         print(f"SKIPPING: {modelType}-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{kan_hyp}, already exists")
                         continue
-                    
                     if prefit_func is not None:
-                        self._prefit_to(actor_c1, prefit_func, grid_range=grid_range)
-                        self._prefit_to(actor_c2, prefit_func, grid_range=grid_range)
-                    
+                        actor_c1 = prefit_model.copy()
+                        actor_c2 = prefit_model.copy()
                     trainEnv = env(k, sigma, dims=1, mode='TRAIN', device=self.device)
                     alg = gradDesc(trainEnv, actor_c1, actor_c2)
                     

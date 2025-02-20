@@ -25,10 +25,10 @@ DISPLAY_SYMBOLIC = False
 PLOT_GRAPHS = False
 
 if __name__ == "__main__":
-    min_hidden_layers = 4
-    max_hidden_layers = 9
-    min_layer_width = 4
-    max_layer_width = 8
+    min_hidden_layers = 2
+    max_hidden_layers = 4
+    min_layer_width = 2
+    max_layer_width = 4
 
     kvals = torch.sqrt(torch.arange(0.05, 0.35, 0.05)).tolist()
     sigvals = torch.sqrt(torch.arange(5.0, 45.0, 5.0)).tolist()
@@ -101,9 +101,9 @@ if __name__ == "__main__":
 
         modelType = 'LAG'
         
-
-        actor_c1 = kan.KAN.loadckpt(f"wits_models_storage/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-c1")
-        actor_c2 = kan.KAN.loadckpt(f"wits_models_storage/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-c2")
+        name = f"wits_models_storage/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
+        actor_c1 = kan.KAN.loadckpt(name+"c1")
+        actor_c2 = kan.KAN.loadckpt(name+"c2")
         act_fun_c1 = actor_c1.act_fun
         act_fun_c2 = actor_c2.act_fun
         
