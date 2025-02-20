@@ -65,7 +65,7 @@ class WitsEnvConstrained:
         sigma: standard dev of x_0
         dims: dimension of environment (system state variables)
     '''
-    def __init__(self, k, sigma, dims, device, mode='TRAIN', constrain_odd = True, constrain_nonlinear=True, constrain_nonaffine = False):
+    def __init__(self, k, sigma, dims, device, mode='TRAIN', constrain_odd = True, constrain_nonlinear=False, constrain_nonaffine = True):
         torch.set_default_dtype(torch.float64)
         
         self.k = k
