@@ -25,10 +25,10 @@ DISPLAY_SYMBOLIC = False
 PLOT_GRAPHS = False
 
 if __name__ == "__main__":
-    min_hidden_layers = 4
+    min_hidden_layers = 5
     max_hidden_layers = 8
-    min_layer_width = 5
-    max_layer_width = 10
+    min_layer_width = 4
+    max_layer_width = 8
 
     kvals = torch.sqrt(torch.arange(0.05, 0.35, 0.05)).tolist()
     sigvals = torch.sqrt(torch.arange(5.0, 45.0, 5.0)).tolist()
@@ -39,6 +39,7 @@ if __name__ == "__main__":
             hyps = [1] + hidden + [1]
             kan_hyps.append(hyps)
 
+    print(kan_hyps)
     f = TrainingFramework.TrainingFramework(k_range=kvals, sigma_range=sigvals, KAN_hyps=kan_hyps)
     if TRAIN_DGD:
         kanType = kan.KAN

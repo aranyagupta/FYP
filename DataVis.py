@@ -8,8 +8,8 @@ def get_loss_from_file(filename, models_loss_dir="./wits_models_loss_storage/"):
     loss_text = float(loss_text[11:])
     return loss_text
 
-def getLosses(dgd=True, dgdcomb=False, ppo=False, lag=False, hyps=[[1,0],[2,0],[2,0],[1,0]]):
-    files = os.listdir("./wits_models_loss_storage")
+def getLosses(dgd=True, dgdcomb=False, ppo=False, lag=False, hyps=[[1,0],[2,0],[2,0],[1,0]], models_loss_dir="./wits_models_loss_storage/"):
+    files = os.listdir(models_loss_dir)
     if not dgdcomb:
         files = [x for x in files if x[:7]!="DGDCOMB"]
     if not dgd:
@@ -28,7 +28,7 @@ def getLosses(dgd=True, dgdcomb=False, ppo=False, lag=False, hyps=[[1,0],[2,0],[
 
     kvals = [float(x[k_start:k_end]) for x in files]
     sigvals = [float(x[sig_start:sig_end]) for x in files]
-    losses = [get_loss_from_file(file) for file in files]
+    losses = [get_loss_from_file(file, models_loss_dir=models_loss_dir) for file in files]
     return kvals, sigvals, losses
 
 def create_heatmap(x_values, y_values, z_values, cmap='viridis', title="Heatmap"):
