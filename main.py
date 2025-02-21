@@ -25,10 +25,10 @@ DISPLAY_SYMBOLIC = False
 PLOT_GRAPHS = False
 
 if __name__ == "__main__":
-    min_hidden_layers = 2
-    max_hidden_layers = 4
-    min_layer_width = 2
-    max_layer_width = 4
+    min_hidden_layers = 4
+    max_hidden_layers = 8
+    min_layer_width = 5
+    max_layer_width = 10
 
     kvals = torch.sqrt(torch.arange(0.05, 0.35, 0.05)).tolist()
     sigvals = torch.sqrt(torch.arange(5.0, 45.0, 5.0)).tolist()
@@ -69,11 +69,11 @@ if __name__ == "__main__":
         env = WitsEnv.WitsEnvConstrained
         gradDesc = WitsPPO.WitsGradDescConstrained
         modelType = "LAG"
-        f.train_framework(kanType, env, gradDesc, modelType)
+        f.train_framework(kanType, env, gradDesc, modelType, prefit_func=None)
 
     if DISPLAY_HEATMAP:
         hyps =  [[1,0],[4,0],[4,0],[4,0],[4,0],[4,0],[1,0]]
-        kvals, sigvals, losses = getLosses(dgd=False, dgdcomb=False, ppo=False, lag=True, hyps=hyps)
+        kvals, sigvals, losses = getLosses(dgd=False, dgdcomb=False, ppo=False, lag=True, hyps=hyps, models_loss_dir="./wits_models_loss_storage/")
 
         kvals_squared = [round(k**2/0.05)*0.05 for k in kvals]
         varvals = [round(s**2/5.0)*5.0 for s in sigvals]
@@ -96,8 +96,8 @@ if __name__ == "__main__":
         # sigma = "5.00"
 
         # 5-STEP (INTENTIONAL)
-        k = 0.55
-        sigma = 5.92
+        k = 0.22
+        sigma = 3.16
 
         modelType = 'LAG'
         
