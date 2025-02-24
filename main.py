@@ -25,10 +25,10 @@ DISPLAY_SYMBOLIC = False
 PLOT_GRAPHS = False
 
 if __name__ == "__main__":
-    min_hidden_layers = 5
-    max_hidden_layers = 8
-    min_layer_width = 4
-    max_layer_width = 8
+    min_hidden_layers = 2
+    max_hidden_layers = 4
+    min_layer_width = 2
+    max_layer_width = 4
 
     kvals = torch.sqrt(torch.arange(0.05, 0.35, 0.05)).tolist()
     sigvals = torch.sqrt(torch.arange(5.0, 45.0, 5.0)).tolist()
@@ -39,7 +39,6 @@ if __name__ == "__main__":
             hyps = [1] + hidden + [1]
             kan_hyps.append(hyps)
 
-    print(kan_hyps)
     f = TrainingFramework.TrainingFramework(k_range=kvals, sigma_range=sigvals, KAN_hyps=kan_hyps)
     if TRAIN_DGD:
         kanType = kan.KAN
@@ -70,11 +69,11 @@ if __name__ == "__main__":
         env = WitsEnv.WitsEnvConstrained
         gradDesc = WitsPPO.WitsGradDescConstrained
         modelType = "LAG"
-        f.train_framework(kanType, env, gradDesc, modelType, prefit_func=None)
+        f.train_framework(kanType, env, gradDesc, modelType, prefit_func=lambda x : x)
 
     if DISPLAY_HEATMAP:
-        hyps =  [[1,0],[4,0],[4,0],[4,0],[4,0],[4,0],[1,0]]
-        kvals, sigvals, losses = getLosses(dgd=False, dgdcomb=False, ppo=False, lag=True, hyps=hyps, models_loss_dir="./wits_models_loss_storage/")
+        hyps =  [[1,0],[2,0],[2,0],[1,0]]
+        kvals, sigvals, losses = getLosses(dgd=False, dgdcomb=False, ppo=False, lag=True, hyps=hyps, models_loss_dir="./lag_odd_nonlinear_prefit_x_loss/")
 
         kvals_squared = [round(k**2/0.05)*0.05 for k in kvals]
         varvals = [round(s**2/5.0)*5.0 for s in sigvals]
@@ -83,10 +82,12 @@ if __name__ == "__main__":
         # lookup = generateLookupTable(kvals, sigvals, losses)
         # print(lookup[(0.3, 4.6)])
 
-        create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title=f"DGD {[x[0] for x in hyps]} Model Costs")
+        modelType = 'Lagrangian (nonlinear constraint, init=x)'
+
+        create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title=f"{modelType} {[x[0] for x in hyps]} Model Costs")
     
     if DISPLAY_SYMBOLIC:
-        hyps = [[1,0],[4,0],[4,0],[4,0],[4,0],[4,0],[1,0]]
+        hyps = [[1,0],[2,0],[2,0],[1,0]]
 
         # LINEAR (UNINTENTIONAL - SHOULD BE 3-STEP)
         # k = 0.22
@@ -97,12 +98,12 @@ if __name__ == "__main__":
         # sigma = "5.00"
 
         # 5-STEP (INTENTIONAL)
-        k = 0.22
-        sigma = 3.16
+        k = 0.39
+        sigma = 3.87
 
         modelType = 'LAG'
         
-        name = f"wits_models_storage/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
+        name = f"lag_odd_nonlinear_prefit_x/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
         actor_c1 = kan.KAN.loadckpt(name+"c1")
         actor_c2 = kan.KAN.loadckpt(name+"c2")
         act_fun_c1 = actor_c1.act_fun
@@ -114,8 +115,8 @@ if __name__ == "__main__":
             # actor_c2.plot()
             # plt.show()
         
-            plot_model_bruteforce(actor_c1, device=device, controller=1)
-            plot_model_bruteforce(actor_c2, device=device, controller=2)
+            plot_model_bruteforce(actor_c1, device=device, title=f"Reconstruction: C1, k={k}, sig={sigma}, {modelType} Nonlinear, prefit=x")
+            plot_model_bruteforce(actor_c2, device=device, title=f"Reconstruction: C2, k={k}, sig={sigma}, {modelType} Nonlinear, prefit=x")
 
 
         # individual_functions_c1 = individual_kanlayers(act_fun_c1)

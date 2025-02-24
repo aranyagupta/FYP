@@ -125,7 +125,7 @@ def plot_sympy_func(sympy_func, interval, num_points=1000):
 
 # Brute-force plots the model output over a range of values
 # without computing the symbolic representation (for quick results)
-def plot_model_bruteforce(actor, device, range=(-15.0, 15.0), controller=1):
+def plot_model_bruteforce(actor, device, range=(-15.0, 15.0), title="Reconstruction: C1 LAG"):
     num_points = 1000
     x_values = torch.arange(range[0], range[1], (range[1]-range[0])/float(num_points)).to(device)
     x_values_plot = x_values.cpu().detach().numpy()
@@ -139,7 +139,7 @@ def plot_model_bruteforce(actor, device, range=(-15.0, 15.0), controller=1):
     plt.plot(x_values_plot, y_values_plot, label=f"f(x)")
     plt.xlabel("x", fontsize=12)
     plt.ylabel("f(x)", fontsize=12)
-    plt.title(f"Brute force reconstruction of Controller {controller}", fontsize=14)
+    plt.title(f"{title}", fontsize=14)
     plt.grid(True)
     plt.legend(fontsize=12)
     plt.show()
