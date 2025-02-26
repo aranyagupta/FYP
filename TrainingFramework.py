@@ -52,9 +52,9 @@ class TrainingFramework:
             'test_input':[],
             'test_label':[],
         }
-        dataset['train_input'] = torch.arange(grid_range[0], grid_range[1], (grid_range[1]-grid_range[0])/1000000.0).reshape(1000000, 1).to(self.device)
+        dataset['train_input'] = torch.arange(grid_range[0], grid_range[1], (grid_range[1]-grid_range[0])/100000.0).reshape(100000, 1).to(self.device)
         dataset['train_label'] = function(dataset['train_input'])
-        dataset['test_input'] = torch.arange(grid_range[0], grid_range[1], (grid_range[1]-grid_range[0])/1000000.0).reshape(1000000, 1).to(self.device)
+        dataset['test_input'] = torch.arange(grid_range[0], grid_range[1], (grid_range[1]-grid_range[0])/100000.0).reshape(100000, 1).to(self.device)
         dataset['test_label'] = function(dataset['test_input'])
         model.fit(dataset, opt="LBFGS", steps=200, lamb=0.)
 
@@ -86,7 +86,7 @@ class TrainingFramework:
                     alg = gradDesc(trainEnv, actor_c1, actor_c2)
                     
                     best_loss = 1e7
-                    alg.train(1000000, 1000)
+                    alg.train(100000, 1000)
                     
                     loss = testEnv.step_timesteps(actor_c1, actor_c2, timesteps=100000)
                     print("TEST LOSS:", loss)
@@ -96,7 +96,7 @@ class TrainingFramework:
                         self._store_loss(modelType, loss, k, sigma, kan_hyp)
                         
                         best_loss = loss
-                        alg.train(1000000, 100)
+                        alg.train(100000, 100)
                         loss = testEnv.step_timesteps(actor_c1, actor_c2, timesteps=100000)
                         print("TEST LOSS:", loss)
 
