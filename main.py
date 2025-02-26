@@ -13,11 +13,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 torch.set_default_device(device=device)
 
-TRAIN_DGD = False
+TRAIN_DGD = True
 TRAIN_PPO = False
 TRAIN_DGDCOMB = False
 TRAIN_ALTERNATING = False
-TRAIN_LAG = True
+TRAIN_LAG = False
 
 DISPLAY_HEATMAP = False
 DISPLAY_SYMBOLIC = False
@@ -25,10 +25,10 @@ DISPLAY_SYMBOLIC = False
 PLOT_GRAPHS = False
 
 if __name__ == "__main__":
-    min_hidden_layers = 2
-    max_hidden_layers = 4
-    min_layer_width = 2
-    max_layer_width = 4
+    min_hidden_layers = 4
+    max_hidden_layers = 6
+    min_layer_width = 4
+    max_layer_width = 6
 
     kvals = torch.sqrt(torch.arange(0.05, 0.35, 0.05)).tolist()
     sigvals = torch.sqrt(torch.arange(5.0, 45.0, 5.0)).tolist()
@@ -87,23 +87,23 @@ if __name__ == "__main__":
         create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title=f"{modelType} {[x[0] for x in hyps]} Model Costs")
     
     if DISPLAY_SYMBOLIC:
-        hyps = [[1,0],[2,0],[2,0],[1,0]]
+        hyps = [[1,0],[6,0],[6,0],[6,0],[6,0],[6,0],[1,0]]
 
         # LINEAR (UNINTENTIONAL - SHOULD BE 3-STEP)
-        # k = 0.22
-        # sigma = 3.16    
+        k = 0.22
+        sigma = "2.24"  
 
         # 3 STEP: TBF
         # k = 0.22
         # sigma = "5.00"
 
         # 5-STEP (INTENTIONAL)
-        k = 0.39
-        sigma = 3.87
+        # k = 0.39
+        # sigma = 3.87
 
-        modelType = 'LAG'
+        modelType = 'DGD'
         
-        name = f"lag_odd_nonlinear_prefit_x/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
+        name = f"wits_models_storage/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
         actor_c1 = kan.KAN.loadckpt(name+"c1")
         actor_c2 = kan.KAN.loadckpt(name+"c2")
         act_fun_c1 = actor_c1.act_fun

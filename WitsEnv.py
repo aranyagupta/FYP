@@ -25,8 +25,8 @@ class WitsEnv():
         self.mode = mode
 
         if mode == 'TEST':
-            self.x_0 = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
-            self.noise = torch.normal(0, 1, (100000, self.dims), device=self.device)
+            self.x_0 = torch.normal(0, self.sigma, (1000000, self.dims), device=self.device)
+            self.noise = torch.normal(0, 1, (1000000, self.dims), device=self.device)
     
     def step_timesteps(self, actor_c1, actor_c2, timesteps, noise=True):
         if self.mode == 'TEST':

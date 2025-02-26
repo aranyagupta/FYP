@@ -52,21 +52,24 @@ class TrainingFramework:
             'test_input':[],
             'test_label':[],
         }
-        dataset['train_input'] = torch.arange(grid_range[0], grid_range[1], (grid_range[1]-grid_range[0])/10000.0).reshape(10000, 1).to(self.device)
+        dataset['train_input'] = torch.arange(grid_range[0], grid_range[1], (grid_range[1]-grid_range[0])/1000000.0).reshape(1000000, 1).to(self.device)
         dataset['train_label'] = function(dataset['train_input'])
-        dataset['test_input'] = torch.arange(grid_range[0], grid_range[1], (grid_range[1]-grid_range[0])/10000.0).reshape(10000, 1).to(self.device)
+        dataset['test_input'] = torch.arange(grid_range[0], grid_range[1], (grid_range[1]-grid_range[0])/1000000.0).reshape(1000000, 1).to(self.device)
         dataset['test_label'] = function(dataset['test_input'])
-        model.fit(dataset, opt="LBFGS", steps=100, lamb=0.)
+        model.fit(dataset, opt="LBFGS", steps=200, lamb=0.)
 
 
-    def train_framework(self, kanType, env, gradDesc, modelType, prefit_func=lambda x : x):
+    def train_framework(self, kanType, env, gradDesc, modelType, prefit_func_1=None, prefit_func_2=None):
         for kan_hyp in self.KAN_hyps:
             for sigma in self.sigma_range:
                 grid_range = [-3*sigma, 3*sigma]
                 grid = min(int(3*sigma+1), 11)
-                prefit_model = kanType(width=kan_hyp, grid=grid, k=3, seed=42, grid_range=grid_range, device=self.device)
-                if prefit_func is not None:
-                    self._prefit_to(prefit_model, prefit_func, grid_range=grid_range)
+                prefit_model_1 = kanType(width=kan_hyp, grid=grid, k=3, seed=42, grid_range=grid_range, device=self.device)
+                prefit_model_2 = kanType(width=kan_hyp, grid=grid, k=3, seed=42, grid_range=grid_range, device=self.device)
+                if prefit_func_1 is not None:
+                    self._prefit_to(prefit_model_1, prefit_func_1, grid_range=grid_range)
+                if prefit_func_2 is not None:
+                    self._prefit_to(prefit_model_2, prefit_func_2, grid_range=grid_range)
                 for k in self.k_range:
                     testEnv = env(k, sigma, dims=1, device=self.device, mode='TEST')
                     print(f"TRAINING: {modelType}-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{kan_hyp}")
@@ -75,14 +78,15 @@ class TrainingFramework:
                     if self._check_exists(modelType, k, sigma, kan_hyp):
                         print(f"SKIPPING: {modelType}-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{kan_hyp}, already exists")
                         continue
-                    if prefit_func is not None:
-                        actor_c1 = prefit_model.copy()
-                        actor_c2 = prefit_model.copy()
+                    if prefit_func_1 is not None:
+                        actor_c1 = prefit_model_1.copy()
+                    if prefit_func_2 is not None:
+                        actor_c2 = prefit_model_2.copy()
                     trainEnv = env(k, sigma, dims=1, mode='TRAIN', device=self.device)
                     alg = gradDesc(trainEnv, actor_c1, actor_c2)
                     
                     best_loss = 1e7
-                    alg.train(1000, 1000)
+                    alg.train(1000000, 1000)
                     
                     loss = testEnv.step_timesteps(actor_c1, actor_c2, timesteps=100000)
                     print("TEST LOSS:", loss)
@@ -92,7 +96,7 @@ class TrainingFramework:
                         self._store_loss(modelType, loss, k, sigma, kan_hyp)
                         
                         best_loss = loss
-                        alg.train(1000, 100)
+                        alg.train(1000000, 100)
                         loss = testEnv.step_timesteps(actor_c1, actor_c2, timesteps=100000)
                         print("TEST LOSS:", loss)
 
