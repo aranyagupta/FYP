@@ -71,9 +71,11 @@ class TrainingFramework:
                 grid = min(int(3*sigma+1), 11)
                 prefit_model_1 = kanType(width=kan_hyp, grid=grid, k=3, seed=42, grid_range=grid_range, device=self.device)
                 prefit_model_2 = kanType(width=kan_hyp, grid=grid, k=3, seed=42, grid_range=grid_range, device=self.device)
-                if prefit_func_1 is not None:
+                finished_sigma = [self._check_exists(modelType, k, sigma, kan_hyp) for k in self.k_range]
+                finished_sigma = all(finished_sigma)
+                if prefit_func_1 is not None and not finished_sigma:
                     self._prefit_to(prefit_model_1, prefit_func_1, grid_range=grid_range)
-                if prefit_func_2 is not None:
+                if prefit_func_2 is not None and not finished_sigma:
                     self._prefit_to(prefit_model_2, prefit_func_2, grid_range=grid_range)
                 for k in self.k_range:
                     testEnv = env(k, sigma, dims=1, device=self.device, mode='TEST')
