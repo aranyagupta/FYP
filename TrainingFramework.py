@@ -53,9 +53,14 @@ class TrainingFramework:
             'test_label':[],
         }
         dataset['train_input'] = torch.arange(grid_range[0], grid_range[1], (grid_range[1]-grid_range[0])/100000.0).reshape(100000, 1).to(self.device)
-        dataset['train_label'] = function(dataset['train_input'])
         dataset['test_input'] = torch.arange(grid_range[0], grid_range[1], (grid_range[1]-grid_range[0])/100000.0).reshape(100000, 1).to(self.device)
-        dataset['test_label'] = function(dataset['test_input'])
+        # assume function requires sigma as argument
+        if function.__code__.co_argcount == 2:
+            dataset['train_label'] = function(grid_range[1]/3.0, dataset['train_input'])
+            dataset['test_label'] = function(grid_range[1]/3.0, dataset['test_input'])
+        else:
+            dataset['train_label'] = function(dataset['train_input'])
+            dataset['test_label'] = function(dataset['test_input'])
         model.fit(dataset, opt="LBFGS", steps=200, lamb=0.)
 
 

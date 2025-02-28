@@ -25,10 +25,10 @@ DISPLAY_SYMBOLIC = False
 PLOT_GRAPHS = False
 
 if __name__ == "__main__":
-    min_hidden_layers = 4
-    max_hidden_layers = 6
-    min_layer_width = 4
-    max_layer_width = 6
+    min_hidden_layers = 2
+    max_hidden_layers = 4
+    min_layer_width = 2
+    max_layer_width = 4
 
     kvals = torch.sqrt(torch.arange(0.05, 0.35, 0.05)).tolist()
     sigvals = torch.sqrt(torch.arange(5.0, 45.0, 5.0)).tolist()
@@ -45,7 +45,7 @@ if __name__ == "__main__":
         env = WitsEnv.WitsEnv
         gradDesc = WitsPPO.WitsGradDesc
         modelType = 'DGD'
-        f.train_framework(kanType, env, gradDesc, modelType)
+        f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda sigma, x : sigma * torch.sign(x), prefit_func_2=lambda sigma, x: sigma*torch.tanh(sigma*x))
     if TRAIN_PPO:
         kanType = CombinedKan.CombinedKan
         env = WitsEnv.WitsEnvCombined
@@ -72,8 +72,8 @@ if __name__ == "__main__":
         f.train_framework(kanType, env, gradDesc, modelType, prefit_func=lambda x : x)
 
     if DISPLAY_HEATMAP:
-        hyps =  [[1,0],[2,0],[2,0],[1,0]]
-        kvals, sigvals, losses = getLosses(dgd=False, dgdcomb=False, ppo=False, lag=True, hyps=hyps, models_loss_dir="./lag_odd_nonlinear_prefit_x_loss/")
+        hyps =  [[1,0],[4,0],[4,0],[4,0],[4,0],[1,0]]
+        kvals, sigvals, losses = getLosses(dgd=True, dgdcomb=False, ppo=False, lag=False, hyps=hyps, models_loss_dir="./wits_models_loss_storage/")
 
         kvals_squared = [round(k**2/0.05)*0.05 for k in kvals]
         varvals = [round(s**2/5.0)*5.0 for s in sigvals]
@@ -82,16 +82,16 @@ if __name__ == "__main__":
         # lookup = generateLookupTable(kvals, sigvals, losses)
         # print(lookup[(0.3, 4.6)])
 
-        modelType = 'Lagrangian (nonlinear constraint, init=x)'
+        modelType = 'DGD'
 
         create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title=f"{modelType} {[x[0] for x in hyps]} Model Costs")
     
     if DISPLAY_SYMBOLIC:
-        hyps = [[1,0],[6,0],[6,0],[6,0],[6,0],[6,0],[1,0]]
+        hyps = [[1,0],[4,0],[4,0],[4,0],[4,0],[1,0]]
 
         # LINEAR (UNINTENTIONAL - SHOULD BE 3-STEP)
-        k = 0.22
-        sigma = "2.24"  
+        k = 0.45
+        sigma = "5.00"  
 
         # 3 STEP: TBF
         # k = 0.22
