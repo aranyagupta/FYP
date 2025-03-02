@@ -29,7 +29,7 @@ class WitsGradDesc:
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
-		self.lr = 0.01
+		self.lr = 0.001
 		self.noise = noise
 
 		# self.actor_c1_optim = Adam(self.actor_c1.parameters(), lr=self.lr)
