@@ -35,8 +35,8 @@ class WitsGradDesc:
 		# self.actor_c1_optim = Adam(self.actor_c1.parameters(), lr=self.lr)
 		# self.actor_c2_optim = Adam(self.actor_c2.parameters(), lr=self.lr)
 
-		self.actor_c1_optim = torch.optim.SGD(self.actor_c1.parameters(), lr=self.lr, momentum=0.7, nesterov=True)
-		self.actor_c2_optim = torch.optim.SGD(self.actor_c1.parameters(), lr=self.lr, momentum=0.7, nesterov=True)
+		self.actor_c1_optim = torch.optim.SGD(self.actor_c1.parameters(), lr=self.lr, momentum=0.5, nesterov=True)
+		self.actor_c2_optim = torch.optim.SGD(self.actor_c1.parameters(), lr=self.lr, momentum=0.5, nesterov=True)
 
 	def train(self, timesteps, batches):
 		start = time.time()
