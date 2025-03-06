@@ -25,9 +25,9 @@ DISPLAY_SYMBOLIC = False
 PLOT_GRAPHS = False
 
 if __name__ == "__main__":
-    min_hidden_layers = 4
-    max_hidden_layers = 6
-    min_layer_width = 4
+    min_hidden_layers = 3
+    max_hidden_layers = 3
+    min_layer_width = 2
     max_layer_width = 6
 
     kvals = torch.sqrt(torch.arange(0.05, 0.35, 0.05)).tolist()
@@ -115,8 +115,8 @@ if __name__ == "__main__":
             # actor_c2.plot()
             # plt.show()
         
-            plot_model_bruteforce(actor_c1, device=device, title=f"Reconstruction: C1, k={k}, sig={sigma}, {modelType} Nonlinear, prefit=x")
-            plot_model_bruteforce(actor_c2, device=device, title=f"Reconstruction: C2, k={k}, sig={sigma}, {modelType} Nonlinear, prefit=x")
+            plot_model_bruteforce(actor_c1, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C1, k={k}, sig={sigma}, {modelType} Nonlinear")
+            plot_model_bruteforce(actor_c2, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C2, k={k}, sig={sigma}, {modelType} Nonlinear")
 
 
         # individual_functions_c1 = individual_kanlayers(act_fun_c1)
