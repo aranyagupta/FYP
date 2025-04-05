@@ -70,10 +70,10 @@ class WitsGradDescConstrained:
 
 		self.actor_c1_optim = Adam(self.actor_c1.parameters(), lr=self.lr)
 		self.actor_c2_optim = Adam(self.actor_c2.parameters(), lr=self.lr)
-		self.mu_0_optim = Adam([self.mu_0], lr=self.lr)
-		self.mu_1_optim = Adam([self.mu_1], lr=self.lr)
-		self.lamb_0_optim = Adam([self.lamb_0], lr=self.lr)
-		self.lamb_1_optim = Adam([self.lamb_1], lr=self.lr)
+		self.mu_0_optim = Adam([self.mu_0], lr=self.lr, maximize=True) # gradient ascent for langrangian multipliers
+		self.mu_1_optim = Adam([self.mu_1], lr=self.lr, maximize=True)
+		self.lamb_0_optim = Adam([self.lamb_0], lr=self.lr, maximize=True)
+		self.lamb_1_optim = Adam([self.lamb_1], lr=self.lr, maximize=True)
 
 	def train(self, timesteps, batches):
 		start = time.time()
@@ -94,14 +94,6 @@ class WitsGradDescConstrained:
 			self.lamb_1_optim.zero_grad()
 
 			actor_loss.backward()
-
-
-			# gradient ascent for lagrangian multipliers
-			with torch.no_grad():
-				self.mu_0.grad *= -1 
-				self.mu_1.grad *= -1 
-				self.lamb_0.grad *= -1
-				self.lamb_1.grad *= -1
 			
 			self.mu_0_optim.step()
 			self.mu_1_optim.step()

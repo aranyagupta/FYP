@@ -65,7 +65,7 @@ class WitsEnvConstrained:
         sigma: standard dev of x_0
         dims: dimension of environment (system state variables)
     '''
-    def __init__(self, k, sigma, dims, device, mode='TRAIN', constrain_odd = False, constrain_nonlinear=True, constrain_nonaffine = False):
+    def __init__(self, k, sigma, dims, device, mode='TRAIN', constrain_odd = False, constrain_nonlinear=False, constrain_nonaffine = False, constrain_new = True):
         torch.set_default_dtype(torch.float64)
         
         self.k = k
@@ -77,6 +77,7 @@ class WitsEnvConstrained:
         self.constrain_odd = constrain_odd
         self.constrain_nonaffine = constrain_nonaffine
         self.constrain_nonlinear = constrain_nonlinear
+        self.constrain_new = constrain_new
 
         if mode == 'TEST':
             self.x_0 = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
@@ -125,6 +126,25 @@ class WitsEnvConstrained:
             second_affine_gradient = (N * sum_xy_2 - sum_x_2 * sum_y_2) / (N * sum_x2_2 - sum_x_2 ** 2)
             second_affine_intercept = (sum_y_2 - second_affine_gradient * sum_x_2) / N
 
+        # new constraint approach - require area between f(x) and linear approximation to be nonzero
+        # and require f(0) = 0
+        if self.constrain_new:
+            first_linear_gradient = (torch.transpose(self.x_0, 0, 1) @ self.x_1)/(torch.transpose(self.x_0, 0, 1) @ self.x_0 + 1e-8) 
+            second_linear_gradient = (torch.transpose(y_1, 0, 1) @ self.x_2)/(torch.transpose(y_1, 0, 1) @ y_1 + 1e-8)
+
+            linear_data_spread = torch.arange(-20.0, 20.0, 40.0/1000.0)
+            linear_data_spread = linear_data_spread.reshape(linear_data_spread.shape[0], 1)
+
+            fun_1 = actor_c1(linear_data_spread)
+            fun_2 = actor_c2(linear_data_spread)
+            
+            first_area = torch.trapz(torch.abs(fun_1-first_linear_gradient*linear_data_spread), dx=40.0/1000.0)
+            second_area = torch.trapz(torch.abs(fun_2-second_linear_gradient*linear_data_spread), dx=40.0/1000.0)
+
+            first_at_zero = actor_c1(torch.zeros(2, 1))[0]
+            second_at_zero = actor_c2(torch.zeros(2, 1))[0]
+
+
         f_x = (self.k**2 * (self.x_0 - self.x_1)**2 + (self.x_2-self.x_1)**2)
         h_0_x = 0
         h_1_x = 0
@@ -142,6 +162,13 @@ class WitsEnvConstrained:
         if self.constrain_nonaffine:
             g_0_x = (self.epsilon - (self.x_1 - (first_affine_gradient*self.x_0 + first_affine_intercept))**2)
             g_1_x = (self.epsilon - (self.x_2 - (second_affine_gradient*y_1 + second_affine_intercept))**2)
+
+        if self.constrain_new:
+            h_0_x = first_at_zero
+            h_1_x = second_at_zero
+
+            g_0_x = self.epsilon - first_area
+            g_1_x = self.epsilon - second_area
         
         print("f_x:", f_x.mean())
         reward = f_x + lamb_0 * h_0_x + lamb_1 * h_1_x + mu_0 * g_0_x + mu_1 * g_1_x

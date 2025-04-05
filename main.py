@@ -13,11 +13,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 torch.set_default_device(device=device)
 
-TRAIN_DGD = True
+TRAIN_DGD = False
 TRAIN_PPO = False
 TRAIN_DGDCOMB = False
 TRAIN_ALTERNATING = False
-TRAIN_LAG = False
+TRAIN_LAG = True
 
 DISPLAY_HEATMAP = False
 DISPLAY_SYMBOLIC = False
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         env = WitsEnv.WitsEnvConstrained
         gradDesc = WitsPPO.WitsGradDescConstrained
         modelType = "LAG"
-        f.train_framework(kanType, env, gradDesc, modelType, prefit_func=lambda x : x)
+        f.train_framework(kanType, env, gradDesc, modelType)
 
     if DISPLAY_HEATMAP:
         hyps =  [[1,0],[4,0],[4,0],[4,0],[4,0],[1,0]]
