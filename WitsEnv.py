@@ -129,7 +129,7 @@ class WitsEnvConstrained:
         # new constraint approach - require area between f(x) and linear approximation to be nonzero
         # and require f(0) = 0
         if self.constrain_new:
-            num_points = 10000
+            num_points = 1000
             linear_data_spread = torch.arange(-20.0, 20.0, 40.0/float(num_points))
             linear_data_spread = linear_data_spread.reshape(linear_data_spread.shape[0], 1)
 
