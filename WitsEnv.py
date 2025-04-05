@@ -129,17 +129,18 @@ class WitsEnvConstrained:
         # new constraint approach - require area between f(x) and linear approximation to be nonzero
         # and require f(0) = 0
         if self.constrain_new:
-            first_linear_gradient = (torch.transpose(self.x_0, 0, 1) @ self.x_1)/(torch.transpose(self.x_0, 0, 1) @ self.x_0 + 1e-8) 
-            second_linear_gradient = (torch.transpose(y_1, 0, 1) @ self.x_2)/(torch.transpose(y_1, 0, 1) @ y_1 + 1e-8)
-
-            linear_data_spread = torch.arange(-20.0, 20.0, 40.0/1000.0)
+            num_points = 10000
+            linear_data_spread = torch.arange(-20.0, 20.0, 40.0/float(num_points))
             linear_data_spread = linear_data_spread.reshape(linear_data_spread.shape[0], 1)
 
             fun_1 = actor_c1(linear_data_spread)
             fun_2 = actor_c2(linear_data_spread)
+
+            first_linear_gradient = (torch.transpose(linear_data_spread, 0, 1) @ fun_1)/(torch.transpose(linear_data_spread, 0, 1) @ linear_data_spread)
+            second_linear_gradient = (torch.transpose(linear_data_spread, 0, 1) @ fun_2)/(torch.transpose(linear_data_spread, 0, 1) @ linear_data_spread)
             
-            first_area = torch.trapz(torch.abs(fun_1-first_linear_gradient*linear_data_spread), dx=40.0/1000.0)
-            second_area = torch.trapz(torch.abs(fun_2-second_linear_gradient*linear_data_spread), dx=40.0/1000.0)
+            first_area = torch.trapz(torch.abs(fun_1-first_linear_gradient*linear_data_spread), dx=40.0/float(num_points))
+            second_area = torch.trapz(torch.abs(fun_2-second_linear_gradient*linear_data_spread), dx=40.0/float(num_points))
 
             first_at_zero = actor_c1(torch.zeros(2, 1))[0]
             second_at_zero = actor_c2(torch.zeros(2, 1))[0]
