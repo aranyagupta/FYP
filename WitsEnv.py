@@ -16,7 +16,7 @@ class WitsEnv():
         dims: dimension of environment (system state variables)
     '''
     def __init__(self, k, sigma, dims, device, mode='TRAIN'):
-        torch.set_default_dtype(torch.float64)
+        torch.set_default_dtype(torch.float32)
         
         self.k = k
         self.sigma = sigma
@@ -66,14 +66,14 @@ class WitsEnvConstrained:
         dims: dimension of environment (system state variables)
     '''
     def __init__(self, k, sigma, dims, device, mode='TRAIN', constrain_odd = False, constrain_nonlinear=False, constrain_nonaffine = False, constrain_new = True):
-        torch.set_default_dtype(torch.float64)
+        torch.set_default_dtype(torch.float32)
         
         self.k = k
         self.sigma = sigma
         self.dims = dims
         self.device = device
         self.mode = mode
-        self.epsilon = 1
+        self.epsilon = 5
         self.constrain_odd = constrain_odd
         self.constrain_nonaffine = constrain_nonaffine
         self.constrain_nonlinear = constrain_nonlinear
@@ -181,7 +181,7 @@ class WitsEnvConstrained:
 
 class WitsEnvCombined:
     def __init__(self, k, sigma, dims, device, mode='TRAIN'):
-        torch.set_default_dtype(torch.float64)
+        torch.set_default_dtype(torch.float32)
         
         self.k = k
         self.sigma = sigma
@@ -224,7 +224,7 @@ class WitsEnvSimple():
     '''
     
     def __init__(self, k, sigma, actor_c1, dims, device):
-        torch.set_default_dtype(torch.float64)
+        torch.set_default_dtype(torch.float32)
         
         self.k = k
         self.sigma = sigma
@@ -256,7 +256,7 @@ class WitsEnvSimple():
     # runs timesteps number of steps at once
     def step_timesteps(self, actor_c1, timesteps):
         self.x_0 = torch.normal(0.0, float(self.sigma), (timesteps,self.dims), device=self.device)
-        # self.x_0 = torch.arange(0, 2*torch.pi, 2*torch.pi/float(timesteps), dtype=torch.float64, device=self.device).reshape(timesteps, self.dims)
+        # self.x_0 = torch.arange(0, 2*torch.pi, 2*torch.pi/float(timesteps), dtype=torch.float32, device=self.device).reshape(timesteps, self.dims)
         
         u_1 = actor_c1(self.x_0)
         self.x_1 = u_1

@@ -22,7 +22,7 @@ from torch.distributions import MultivariateNormal
 
 
 # PPO for full Witsenhausen counterexample
-torch.set_default_dtype(torch.float64)
+torch.set_default_dtype(torch.float32)
 
 class WitsGradDesc:
 	def __init__(self, env, actor_c1, actor_c2, noise=True):
@@ -301,7 +301,7 @@ class WitsPPOCombined:
 				batch_rtgs.insert(0, discounted_reward)
 
 		# Convert the rewards-to-go into a tensor
-		batch_rtgs = torch.tensor(batch_rtgs, dtype=torch.float64)
+		batch_rtgs = torch.tensor(batch_rtgs, dtype=torch.float32)
 
 		return batch_rtgs
 
