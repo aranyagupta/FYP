@@ -177,3 +177,6 @@ wits_models_loss_storage/
 wits_models_storage/
 wits_models_loss_storage_LAG_oddconstraint/
 wits_models_storage_LAG_oddconstraint/
+constrained_experiments/
+witsenhausen_preinit_loss/
+witsenhausen_preinit_models/
