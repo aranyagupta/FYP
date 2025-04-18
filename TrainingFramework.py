@@ -95,7 +95,7 @@ class TrainingFramework:
                     alg = gradDesc(trainEnv, actor_c1, actor_c2)
                     
                     best_loss = 1e7
-                    alg.train(100000, 1000)
+                    alg.train(400000, 1000)
                     
                     loss = testEnv.step_timesteps(actor_c1, actor_c2, timesteps=100000)
                     print("TEST LOSS:", loss)
@@ -105,7 +105,7 @@ class TrainingFramework:
                         self._store_loss(modelType, loss, k, sigma, kan_hyp)
                         
                         best_loss = loss
-                        alg.train(100000, 100)
+                        alg.train(400000, 100)
                         loss = testEnv.step_timesteps(actor_c1, actor_c2, timesteps=100000)
                         print("TEST LOSS:", loss)
 

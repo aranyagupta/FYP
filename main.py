@@ -72,8 +72,8 @@ if __name__ == "__main__":
         f.train_framework(kanType, env, gradDesc, modelType)
 
     if DISPLAY_HEATMAP:
-        hyps =  [[1,0],[4,0],[4,0],[4,0],[4,0],[1,0]]
-        kvals, sigvals, losses = getLosses(dgd=True, dgdcomb=False, ppo=False, lag=False, hyps=hyps, models_loss_dir="./wits_models_loss_storage/")
+        hyps =  [[1,0],[2,0],[2,0],[2,0],[1,0]]
+        kvals, sigvals, losses = getLosses(dgd=False, dgdcomb=False, ppo=False, lag=True, hyps=hyps, models_loss_dir="./constrained_experiments/lag_constrained_area_and_origin_loss/")
 
         kvals_squared = [round(k**2/0.05)*0.05 for k in kvals]
         varvals = [round(s**2/5.0)*5.0 for s in sigvals]
@@ -82,16 +82,16 @@ if __name__ == "__main__":
         # lookup = generateLookupTable(kvals, sigvals, losses)
         # print(lookup[(0.3, 4.6)])
 
-        modelType = 'DGD'
+        modelType = 'LAG'
 
-        create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title=f"{modelType} {[x[0] for x in hyps]} Model Costs")
+        create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title=f"{modelType} {[x[0] for x in hyps]} Model Costs (Area constraint)")
     
     if DISPLAY_SYMBOLIC:
-        hyps = [[1,0],[4,0],[4,0],[4,0],[4,0],[1,0]]
+        hyps = [[1,0],[2,0],[2,0],[2,0],[1,0]]
 
         # LINEAR (UNINTENTIONAL - SHOULD BE 3-STEP)
-        k = 0.45
-        sigma = "5.00"  
+        k = 0.22
+        sigma = "2.24"  
 
         # 3 STEP: TBF
         # k = 0.22
@@ -101,9 +101,9 @@ if __name__ == "__main__":
         # k = 0.39
         # sigma = 3.87
 
-        modelType = 'DGD'
+        modelType = 'LAG'
         
-        name = f"wits_models_storage/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
+        name = f"constrained_experiments/lag_constrained_area_and_origin_models/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
         actor_c1 = kan.KAN.loadckpt(name+"c1")
         actor_c2 = kan.KAN.loadckpt(name+"c2")
         act_fun_c1 = actor_c1.act_fun
@@ -115,8 +115,8 @@ if __name__ == "__main__":
             # actor_c2.plot()
             # plt.show()
         
-            plot_model_bruteforce(actor_c1, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C1, k={k}, sig={sigma}, {modelType} Nonlinear")
-            plot_model_bruteforce(actor_c2, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C2, k={k}, sig={sigma}, {modelType} Nonlinear")
+            plot_model_bruteforce(actor_c1, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C1, k={k}, sig={sigma}, {modelType} Wits Preinit")
+            plot_model_bruteforce(actor_c2, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C2, k={k}, sig={sigma}, {modelType} Wits Preinit")
 
 
         # individual_functions_c1 = individual_kanlayers(act_fun_c1)
