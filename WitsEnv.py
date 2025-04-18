@@ -73,7 +73,7 @@ class WitsEnvConstrained:
         self.dims = dims
         self.device = device
         self.mode = mode
-        self.epsilon = 5
+        self.epsilon = 10
         self.constrain_odd = constrain_odd
         self.constrain_nonaffine = constrain_nonaffine
         self.constrain_nonlinear = constrain_nonlinear
