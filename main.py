@@ -17,7 +17,8 @@ TRAIN_DGD = False
 TRAIN_PPO = False
 TRAIN_DGDCOMB = False
 TRAIN_ALTERNATING = False
-TRAIN_LAG = True
+TRAIN_LAG = False
+TRAIN_LSA = True
 
 DISPLAY_HEATMAP = False
 DISPLAY_SYMBOLIC = False
@@ -69,6 +70,12 @@ if __name__ == "__main__":
         env = WitsEnv.WitsEnvConstrained
         gradDesc = WitsPPO.WitsGradDescConstrained
         modelType = "LAG"
+        f.train_framework(kanType, env, gradDesc, modelType)
+    if TRAIN_LSA:
+        kanType = kan.KAN
+        env = WitsEnv.WitsEnvLSA
+        gradDesc = WitsPPO.WitsLSA
+        modelType="LSA"
         f.train_framework(kanType, env, gradDesc, modelType)
 
     if DISPLAY_HEATMAP:

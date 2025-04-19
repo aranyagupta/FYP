@@ -458,4 +458,41 @@ class WitsAlternatingDescent:
 				actor_loss.backward()
 				self.actor_c1_optim.step()
 				print("ALTERNATING LOSS:", actor_loss)
+
+# Local Search Algorithm as described in this paper:
+# https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8264401	
+class WitsLSA:
+	def __init__(self, env, actor_c1, actor_c2=None, N=15, r=0.25, p=1e-9):
+		self.env = env
+		self.actor_c1 = actor_c1
+		self.actor_c2 = actor_c2
+		self.lr = 0.01
+
+		self.N = N # num repetitions
+		self.r = r # local smoothing radius
+		self.p = p # precision
+
+		self.actor_c1_optim = Adam(self.actor_c1.parameters(), lr=self.lr)
+
+	def train(self, timesteps, batches):
+		while True:
+			for i in range(self.N):
+				dJ_dx1, dx1_dJ_dx1, out, x_0 = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps)
+				gradients = torch.zeros_like(dx1_dJ_dx1)
+				for i in range(dx1_dJ_dx1.shape[0]):
+					if dx1_dJ_dx1[i] <= 0.001:
+						gradients[i] = -self.lr*dJ_dx1[i]
+					else:
+						gradients[i] = dJ_dx1[i]/torch.abs(dx1_dJ_dx1[i])
 				
+				self.actor_c1_optim.zero_grad()
+				out.backward(gradients, retain_graph=True)
+				self.actor_c1_optim.step()
+
+			# Skip smoothing step as it doesn't work nicely with KANs (doesn't produce clean update law)
+
+			x_0_integrating, indices = torch.sort(x_0, dim=0)
+			stop_condition = torch.trapz(torch.abs(dJ_dx1[indices].reshape(dJ_dx1.shape[0], 1)), x_0_integrating, dim=0)
+			print("STOP CONDITION:", stop_condition)
+			if self.p > stop_condition:
+				break

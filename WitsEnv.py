@@ -210,6 +210,119 @@ class WitsEnvCombined:
         obs_c2 = y_2
         reward = - (self.k**2 * (x - u_1)**2 + (u_2-u_1)**2)
         return obs_c1, obs_c2, reward, False, False
+    
+# Environment for local search algorithm
+class WitsEnvLSA:
+    def __init__(self, k, sigma, dims, device, mode='TRAIN'):
+        torch.set_default_dtype(torch.float32)
+        
+        self.k = k
+        self.sigma = sigma
+        self.device = device
+        self.mode = mode
+        self.dims = dims
+
+        if self.mode == 'TEST':
+            self.x_0 = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
+            self.noise = torch.normal(0, 1, (100000, self.dims), device=self.device)
+    
+    # generate u1(y1) for a given (single value of) y1, and large sample of x1(x0)
+    def generate_u1(self, y1, x1):
+        log_weights = -0.5 * (y1 - x1) ** 2 # Gaussian noise likelihood
+        weights = torch.exp(log_weights - torch.max(log_weights)) # numerical stability
+        weights = weights / torch.sum(weights) # normalisation
+        out = torch.sum(weights * x1)
+        return out
+
+    # same as above but for a tensor of y1
+    def generate_u1_tensor(self, y1, x1):
+        t = torch.zeros_like(y1)
+        for element in range(y1.shape[0]):
+            t[element] = self.generate_u1(y1[element], x1)
+        return t
+
+    def step_timesteps(self, actor_c1, actor_c2=None, timesteps=100000):
+        # actor_c1 = x1(x0) in paper
+        # No need for actor c2 as it can be directly calculated
+        if self.mode == 'TEST':
+            with torch.no_grad():
+                x_1 = actor_c1(self.x_0)
+                y_1 = x_1 + self.noise
+                u_1 = self.generate_u1_tensor(y_1, x_1)
+                reward = (self.k**2 * (self.x_0 - x_1)**2 + (u_1-x_1)**2)
+                return reward.mean()
+            
+        x_0 = torch.normal(0, self.sigma, (timesteps,1), device=self.device)
+        x_1 = actor_c1(x_0)
+        w = torch.normal(0, 1, (timesteps,self.dims), device=self.device)
+        y_1 = x_1 + w
+        x_2 = self.generate_u1_tensor(y_1, x_1)
+
+        # u1(y1) fixed, as it can be computed for arbitrary input using generate_u1_tensor
+        # now, calculate gradient for x1(x0) using u1(y1)
+        
+        # x0 distribution pdf
+        f_X = lambda x : 1.0/(self.sigma* torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-x**2/(2*self.sigma**2))
+        # w distribution pdf
+        f_W = lambda w : 1.0/(torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-w**2/(2))
+
+        # dJ/dx_1[x_1, u_1](x_0) as in paper
+        # done by integrating D'_X(x_0, y_1)f_X(x_0)f_W(w) wrt y_1
+        # fix x_0, sort y_1 and permute integrand correspondingly, then integrate using trapz
+        # store result in dJ/dx_1, then add remaining constant part at the end
+
+        dJ_dx1 = torch.zeros_like(x_0)
+        for i in range(x_0.shape[0]):
+            current_x_0 = x_0[i]
+            current_x_1 = x_1[i]
+
+            # integrand at a fixed (float) value of x_0
+            integrand = (2*(current_x_1-x_2) + (y_1-current_x_1) * (current_x_1-x_2)**2)*f_X(current_x_0)*f_W(y_1-current_x_1)
+            y_1_integrating, indices = torch.sort(y_1, dim=0)
+            # computing integral over all y_1
+            integral = torch.trapz(y=integrand[indices].reshape(integrand.shape[0], 1), x=y_1_integrating, dim=0)
+            dJ_dx1[i] = integral
+        
+        print("dJ_dx1.shape:",dJ_dx1.shape)
+        dJ_dx1 = dJ_dx1 + 2*self.k**2*(x_1-x_0)*f_X(x_0)
+
+        # dJ/du_1[x_1, u_1](y_1) as in paper
+        # same rough steps as above, integrating wrt x_0 instead
+        # here for completeness, not necessary for gradient calculation
+
+        # dJ_du1 = torch.zeros_like(x_0)
+        # for i in range(y_1.shape):
+        #     current_y_1 = y_1[i]
+        #     integrand = 2*(current_y_1 - x_1)*f_X(x_0)*f_W(current_y_1-x_1)
+        #     x_0_integrating, indices = torch.sort(x_0, dim=0)
+        #     integral = torch.trapz(integrand[indices], x_0_integrating, dim=0)
+        #     dJ_du1[i] = integral
+
+        # Partial derivative of dJ_dx1 wrt x_1, taken from paper
+        dx1_dJ_dx1 = 2*(self.k**2-1)*f_X(x_0)
+        for i in range(x_0.shape[0]):
+            current_x_0 = x_0[i]
+            current_x_1 = x_1[i]
+            integrand = ((y_1-current_x_1)*(current_x_1-x_2+2)**2 - (current_x_1-x_2))**2 * f_X(current_x_0)*f_W(y_1-current_x_1)
+            y_1_integrating, indices = torch.sort(y_1, dim=0)
+            integral = torch.trapz(integrand, y_1_integrating, dim=0)
+            dx1_dJ_dx1[i] = dx1_dJ_dx1[i] + integral
+
+        return dJ_dx1, dx1_dJ_dx1, x_1, x_0
+        
+            
+            
+
+        
+
+
+
+        
+        
+
+
+        
+        
 
 # ----------------- Simplified Environments ----------------- #
 class WitsEnvSimple():
