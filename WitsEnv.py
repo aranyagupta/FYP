@@ -283,7 +283,6 @@ class WitsEnvLSA:
             integral = torch.trapz(y=integrand[indices].reshape(integrand.shape[0], 1), x=y_1_integrating, dim=0)
             dJ_dx1[i] = integral
         
-        print("dJ_dx1.shape:",dJ_dx1.shape)
         dJ_dx1 = dJ_dx1 + 2*self.k**2*(x_1-x_0)*f_X(x_0)
 
         # dJ/du_1[x_1, u_1](y_1) as in paper

@@ -95,17 +95,22 @@ class TrainingFramework:
                     alg = gradDesc(trainEnv, actor_c1, actor_c2)
                     
                     best_loss = 1e7
-                    alg.train(5000, 1)
+                    if type(alg) == WitsPPO.WitsLSA:
+                        alg.train(5000,1)
+                    else:
+                        alg.train(100000, 1000)
                     
                     loss = testEnv.step_timesteps(actor_c1, actor_c2, timesteps=100000)
                     print("TEST LOSS:", loss)
 
                     while (loss < best_loss):
+                        if type(alg) == WitsPPO.WitsLSA:
+                            break
                         self._store_actors(modelType, actor_c1, actor_c2, k, sigma, kan_hyp)
                         self._store_loss(modelType, loss, k, sigma, kan_hyp)
                         
                         best_loss = loss
-                        alg.train(50000, 100)
+                        alg.train(100000, 1)
                         loss = testEnv.step_timesteps(actor_c1, actor_c2, timesteps=100000)
                         print("TEST LOSS:", loss)
 
