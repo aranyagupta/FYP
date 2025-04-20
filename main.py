@@ -76,7 +76,7 @@ if __name__ == "__main__":
         env = WitsEnv.WitsEnvLSA
         gradDesc = WitsPPO.WitsLSA
         modelType="LSA"
-        f.train_framework(kanType, env, gradDesc, modelType)
+        f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda x : x)
 
     if DISPLAY_HEATMAP:
         hyps =  [[1,0],[2,0],[2,0],[2,0],[1,0]]
