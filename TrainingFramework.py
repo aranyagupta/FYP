@@ -96,7 +96,7 @@ class TrainingFramework:
                     
                     best_loss = 1e7
                     if type(alg) == WitsPPO.WitsLSA:
-                        alg.train(7500,1)
+                        alg.train(5000,1)
                     else:
                         alg.train(100000, 1000)
                     
