@@ -63,7 +63,7 @@ class TrainingFramework:
         else:
             dataset['train_label'] = function(dataset['train_input'])
             dataset['test_label'] = function(dataset['test_input'])
-        model.fit(dataset, opt="LBFGS", steps=100, lamb=0.)
+        model.fit(dataset, opt="Adam", steps=100, lamb=0.)
 
 
     def train_framework(self, kanType, env, gradDesc, modelType, prefit_func_1=None, prefit_func_2=None):
