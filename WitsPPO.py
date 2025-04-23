@@ -462,11 +462,11 @@ class WitsAlternatingDescent:
 # Local Search Algorithm as described in this paper:
 # https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8264401	
 class WitsLSA:
-	def __init__(self, env, actor_c1, actor_c2=None, N=15, r=0.25, p=1e-2):
+	def __init__(self, env, actor_c1, actor_c2=None, N=15, r=0.25, p=0.03):
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
-		self.lr = 0.05
+		self.lr = 0.01
 
 		self.N = N # num repetitions
 		self.r = r # local smoothing radius
