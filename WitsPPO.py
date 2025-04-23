@@ -466,7 +466,7 @@ class WitsLSA:
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
-		self.lr = 0.01
+		self.lr = 0.05
 
 		self.N = N # num repetitions
 		self.r = r # local smoothing radius
@@ -494,5 +494,5 @@ class WitsLSA:
 			x_0_integrating, indices = torch.sort(x_0, dim=0)
 			stop_condition = torch.trapz(torch.abs(dJ_dx1[indices].reshape(dJ_dx1.shape[0], 1)), x_0_integrating, dim=0)
 			print("STOP CONDITION:", stop_condition)
-			if self.p > stop_condition:
+			if stop_condition < self.p:
 				break
