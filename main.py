@@ -28,7 +28,7 @@ PLOT_GRAPHS = False
 if __name__ == "__main__":
     min_hidden_layers = 3
     max_hidden_layers = 3
-    min_layer_width = 2
+    min_layer_width = 4
     max_layer_width = 6
 
     # kvals = torch.sqrt(torch.arange(0.05, 0.35, 0.05)).tolist()

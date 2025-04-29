@@ -321,13 +321,6 @@ class WitsEnvLSA:
         # print("dx1_dJ_dx1_check:", dx1_dJ_dx1_check)
         # assert torch.any(torch.abs(dx1_dJ_dx1_check - dx1_dJ_dx1)<=1e-4), f"dx1_dJ_dx1 is not accurate:\n value:{dx1_dJ_dx1},\n check:{dx1_dJ_dx1_check}"
         ############################################################################
-        # print("dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
-        # print("dx1_dJ_dx1 has nan:", torch.any(torch.isnan(dx1_dJ_dx1)))
-        # print("x_0 has nan:", torch.any(torch.isnan(x_0)))
-        # print("x_1 has nan:", torch.any(torch.isnan(x_1)))
-        # print("x_1 max:", torch.max(x_1))
-        # print("x_2 has nan:", torch.any(torch.isnan(x_2)))
-        # print("x_2 max:", torch.max(x_2))
         return dJ_dx1, dx1_dJ_dx1, x_1, x_0
    
 
