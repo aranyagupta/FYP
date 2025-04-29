@@ -466,12 +466,12 @@ class WitsLSA:
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
-		self.lr = 1e-3 # lr used for all parameters of model, keep low
+		self.lr = 1e-2 # lr used for all parameters of model, keep low
 
 		self.N = N # num repetitions
 		self.r = r # local smoothing radius
 		self.p = p # precision
-		self.tau = 1.0/5000.0 # grad descent step size
+		self.tau = 1e-2 # grad descent step size
 
 		self.actor_c1_optim = torch.optim.SGD(self.actor_c1.parameters(), lr=self.lr)
 		# SGD is a closer implementation to what we want to do
@@ -481,11 +481,14 @@ class WitsLSA:
 			for i in range(self.N):
 				dJ_dx1, dx1_dJ_dx1, out, x_0 = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps)
 				gradients = torch.zeros_like(dx1_dJ_dx1)
+				count = 0
 				for i in range(dx1_dJ_dx1.shape[0]):
-					if torch.abs(dx1_dJ_dx1[i]) <= 1e-4:
-						gradients[i] = self.tau * dJ_dx1[i] # positive as optimiser automatically performs descent
+					if torch.abs(dx1_dJ_dx1[i]) <= 1e-3:
+						gradients[i] = -self.tau * dJ_dx1[i] # not sure why -ve is working but +ve isnt
+						count+=1
 					else:
-						gradients[i] = dJ_dx1[i]/torch.abs(dx1_dJ_dx1[i]) # positive as optimiser automatically performs descent
+						gradients[i] = dJ_dx1[i]/torch.abs(dx1_dJ_dx1[i]) 
+				print("gd count:", count)
 				
 				# print("gradients has nan:", torch.any(torch.isnan(gradients)))
 				self.actor_c1_optim.zero_grad()
