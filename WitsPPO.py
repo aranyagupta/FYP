@@ -487,8 +487,6 @@ class WitsLSA:
 					if torch.abs(dx1_dJ_dx1[i]) <= 1e-6:
 						gradients[i] = self.tau * dJ_dx1[i] # positive as optimiser automatically handles gradient descent
 						count+=1
-					else:
-						gradients[i] = dJ_dx1[i]/torch.abs(dx1_dJ_dx1[i]) 
 				print("gd count:", count)
 				
 				# print("gradients has nan:", torch.any(torch.isnan(gradients)))
