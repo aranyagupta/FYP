@@ -304,6 +304,10 @@ class WitsEnvLSA:
             integral = torch.trapz(integrand[indices].reshape(integrand.shape[0], 1), y_1_integrating, dim=0)
             dx1_dJ_dx1[i] = dx1_dJ_dx1[i] + integral
 
+        print("dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
+        print("dx1_dJ_dx1 has nan:", torch.any(torch.isnan(dx1_dJ_dx1)))
+        print("x_1 has nan:", torch.any(torch.isnan(x_1)))
+        print("x_0 has nan:", torch.any(torch.isnan(x_0)))
         return dJ_dx1, dx1_dJ_dx1, x_1, x_0
         
             

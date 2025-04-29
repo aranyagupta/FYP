@@ -465,7 +465,6 @@ class WitsLSA:
 	def __init__(self, env, actor_c1, actor_c2=None, N=15, r=0.25, p=0.01):
 		self.env = env
 		self.actor_c1 = actor_c1
-		self.actor_c2 = actor_c2
 		self.lr = 0.5 # use tau, not lr, to control gradient descent step size (newton's method requires no step size) 
 
 		self.N = N # num repetitions
