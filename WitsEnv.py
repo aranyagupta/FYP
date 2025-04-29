@@ -303,6 +303,7 @@ class WitsEnvLSA:
         integrand_reshaped = integrand[:, indices].reshape(integrand.shape[0], integrand.shape[1])
         integral = torch.trapz(y=integrand_reshaped, x=y_1_integrating, dim=0)
         dx1_dJ_dx1 = dx1_dJ_dx1 + integral
+        print("dx1_dJ_dx1.shape in WitsEnv:", dx1_dJ_dx1.shape)
 
          ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
         # for i in range(x_0.shape[0]):
