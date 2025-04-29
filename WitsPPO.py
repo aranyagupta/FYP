@@ -487,8 +487,9 @@ class WitsLSA:
 					else:
 						gradients[i] = dJ_dx1[i]/torch.abs(dx1_dJ_dx1[i]) # positive as optimiser automatically performs descent
 				
+				print("gradients has nan:", torch.any(torch.isnan(gradients)))
 				self.actor_c1_optim.zero_grad()
-				out.backward(gradients, retain_graph=True)
+				out.backward(gradients=gradients, retain_graph=True)
 				self.actor_c1_optim.step()
 
 			# Skip smoothing step as it doesn't work nicely with KANs (doesn't produce clean update law)
