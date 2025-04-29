@@ -474,6 +474,7 @@ class WitsLSA:
 		self.tau = 1e-3 # grad descent step size
 
 		self.actor_c1_optim = torch.optim.Adam(self.actor_c1.parameters(), lr=self.lr)
+		self.scheduler = torch.optim.lr_scheduler.StepLR(self.actor_c1_optim, step_size=20, gamma=0.1)
 		
 	def train(self, timesteps, batches):
 		while True:
@@ -495,9 +496,9 @@ class WitsLSA:
 				self.actor_c1_optim.step()
 
 			# Skip smoothing step as it doesn't work nicely with KANs (doesn't produce clean update law)
-
 			x_0_integrating, indices = torch.sort(x_0, dim=0)
 			stop_condition = torch.trapz(torch.abs(dJ_dx1[indices].reshape(dJ_dx1.shape[0], 1)), x_0_integrating, dim=0)
 			print("STOP CONDITION:", stop_condition)
 			if stop_condition < self.p:
 				break
+			self.scheduler.step()
