@@ -471,7 +471,7 @@ class WitsLSA:
 		self.N = N # num repetitions
 		self.r = r # local smoothing radius
 		self.p = p # precision
-		self.tau = 1e-2 # grad descent step size
+		self.tau = 1e-3 # grad descent step size
 
 		self.actor_c1_optim = torch.optim.Adam(self.actor_c1.parameters(), lr=self.lr)
 		# SGD is a closer implementation to what we want to do
@@ -482,9 +482,10 @@ class WitsLSA:
 				dJ_dx1, dx1_dJ_dx1, out, x_0 = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps)
 				gradients = torch.zeros_like(dx1_dJ_dx1)
 				count = 0
+				gradients = dJ_dx1/torch.abs(dx1_dJ_dx1) 
 				for i in range(dx1_dJ_dx1.shape[0]):
-					if (dx1_dJ_dx1[i]) <= 1e-3:
-						gradients[i] = -self.tau * dJ_dx1[i] # not sure why -ve is working but +ve isnt
+					if torch.abs(dx1_dJ_dx1[i]) <= 1e-6:
+						gradients[i] = self.tau * dJ_dx1[i] # positive as optimiser automatically handles gradient descent
 						count+=1
 					else:
 						gradients[i] = dJ_dx1[i]/torch.abs(dx1_dJ_dx1[i]) 
