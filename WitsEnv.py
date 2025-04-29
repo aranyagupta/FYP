@@ -286,8 +286,6 @@ class WitsEnvLSA:
                 print("(current_x_1-x_2)**2:", (current_x_1-x_2)**2)
                 print("f_X(current_x_0):", f_X(current_x_0))
                 print("f_W(y_1-current_x_1):", f_W(y_1-current_x_1))
-                print("fst:", (2*(current_x_1-x_2) + (y_1-current_x_1) * (current_x_1-x_2)**2))
-                print("snd:", f_X(current_x_0)*f_W(y_1-current_x_1))
             # computing integral over all y_1
             integral = torch.trapz(y=integrand[indices].reshape(integrand.shape[0], 1), x=y_1_integrating, dim=0)
             dJ_dx1[i] = dJ_dx1[i] + integral
