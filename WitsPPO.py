@@ -473,7 +473,7 @@ class WitsLSA:
 		self.p = p # precision
 		self.tau = 1e-2 # grad descent step size
 
-		self.actor_c1_optim = torch.optim.SGD(self.actor_c1.parameters(), lr=self.lr)
+		self.actor_c1_optim = torch.optim.Adam(self.actor_c1.parameters(), lr=self.lr)
 		# SGD is a closer implementation to what we want to do
 
 	def train(self, timesteps, batches):
