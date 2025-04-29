@@ -466,7 +466,7 @@ class WitsLSA:
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
-		self.lr = 1 # use tau, not lr, to control gradient descent step size (newton's method requires no step size) 
+		self.lr = 0.5 # use tau, not lr, to control gradient descent step size (newton's method requires no step size) 
 
 		self.N = N # num repetitions
 		self.r = r # local smoothing radius
@@ -489,7 +489,7 @@ class WitsLSA:
 				
 				print("gradients has nan:", torch.any(torch.isnan(gradients)))
 				self.actor_c1_optim.zero_grad()
-				out.backward(gradients=gradients, retain_graph=True)
+				out.backward(gradient=gradients, retain_graph=True)
 				self.actor_c1_optim.step()
 
 			# Skip smoothing step as it doesn't work nicely with KANs (doesn't produce clean update law)
