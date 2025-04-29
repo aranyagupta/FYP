@@ -273,7 +273,7 @@ class WitsEnvLSA:
 
         y_1_integrating, indices = torch.sort(y_1, dim=0)
         dJ_dx1 = 2*self.k**2*(x_1-x_0)*f_X(x_0)
-        print("initial dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
+        # print("initial dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
         for i in range(x_0.shape[0]):
             current_x_0 = x_0[i]
             current_x_1 = x_1[i]
