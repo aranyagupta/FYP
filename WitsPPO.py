@@ -480,12 +480,8 @@ class WitsLSA:
 		while True:
 			for i in range(self.N):
 				dJ_dx1, dx1_dJ_dx1, out, x_0 = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps)
-				print("dJ_dx1.shape:", dJ_dx1.shape)
-				print("dx1_dJ_dx1.shape in WitsPPO:", dx1_dJ_dx1.shape)
 				gradients = dJ_dx1/torch.abs(dx1_dJ_dx1)
-				print("gradients.shape", gradients.shape)
 				small_mask = torch.abs(dx1_dJ_dx1) <= 1e-6  
-				print("small_mask.shape", small_mask.shape)
 				gradients[small_mask] = self.tau * dJ_dx1[small_mask]
 				count = small_mask.sum().item()
 				########## FOR LOOP IMPLEMENTATION - SLOW ####################
