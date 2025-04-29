@@ -483,7 +483,7 @@ class WitsLSA:
 				gradients = torch.zeros_like(dx1_dJ_dx1)
 				count = 0
 				for i in range(dx1_dJ_dx1.shape[0]):
-					if torch.abs(dx1_dJ_dx1[i]) <= 1e-3:
+					if (dx1_dJ_dx1[i]) <= 1e-3:
 						gradients[i] = -self.tau * dJ_dx1[i] # not sure why -ve is working but +ve isnt
 						count+=1
 					else:
