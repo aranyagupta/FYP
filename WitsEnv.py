@@ -285,20 +285,20 @@ class WitsEnvLSA:
         dJ_dx1 = dJ_dx1 + integral
 
         ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
-        dJ_dx1_check = 2*self.k**2*(x_1-x_0)*f_X(x_0)
-        # print("initial dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
-        for i in range(x_0.shape[0]):
-            current_x_0 = x_0[i]
-            current_x_1 = x_1[i]
+        # dJ_dx1_check = 2*self.k**2*(x_1-x_0)*f_X(x_0)
+        # # print("initial dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
+        # for i in range(x_0.shape[0]):
+        #     current_x_0 = x_0[i]
+        #     current_x_1 = x_1[i]
 
-            # integrand at a fixed (float) value of x_0
-            integrand = (2*(current_x_1-x_2) + (y_1-current_x_1) * (current_x_1-x_2)**2)*f_X(current_x_0)*f_W(y_1-current_x_1)
-            # computing integral over all y_1
-            integral = torch.trapz(y=integrand[indices].reshape(integrand.shape[0], 1), x=y_1_integrating, dim=0)
-            dJ_dx1_check[i] = dJ_dx1_check[i] + integral
-        print("dJ_dx1:", dJ_dx1)
-        print("dJ_dx1_check:", dJ_dx1_check)
-        assert torch.any(torch.abs(dJ_dx1_check - dJ_dx1)<=1e-4), f"dJ_dx1 is not accurate:\n value={dJ_dx1},\n check={dJ_dx1_check}"
+        #     # integrand at a fixed (float) value of x_0
+        #     integrand = (2*(current_x_1-x_2) + (y_1-current_x_1) * (current_x_1-x_2)**2)*f_X(current_x_0)*f_W(y_1-current_x_1)
+        #     # computing integral over all y_1
+        #     integral = torch.trapz(y=integrand[indices].reshape(integrand.shape[0], 1), x=y_1_integrating, dim=0)
+        #     dJ_dx1_check[i] = dJ_dx1_check[i] + integral
+        # print("dJ_dx1:", dJ_dx1)
+        # print("dJ_dx1_check:", dJ_dx1_check)
+        # assert torch.any(torch.abs(dJ_dx1_check - dJ_dx1)<=1e-4), f"dJ_dx1 is not accurate:\n value={dJ_dx1},\n check={dJ_dx1_check}"
         ############################################################################
 
         # Partial derivative of dJ_dx1 wrt x_1, taken from paper
@@ -310,16 +310,16 @@ class WitsEnvLSA:
         dx1_dJ_dx1 = dx1_dJ_dx1 + integral
 
          ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
-        dx1_dJ_dx1_check = 2*(self.k**2-1)*f_X(x_0)
-        for i in range(x_0.shape[0]):
-            current_x_0 = x_0[i]
-            current_x_1 = x_1[i]
-            integrand = ((y_1-current_x_1)*(current_x_1-x_2+2)**2 - (current_x_1-x_2))**2 * f_X(current_x_0)*f_W(y_1-current_x_1)
-            integral = torch.trapz(y=integrand[indices].reshape(integrand.shape[0], 1), x=y_1_integrating, dim=0)
-            dx1_dJ_dx1_check[i] = dx1_dJ_dx1_check[i] + integral
-        print("dx1_dJ_dx1:", dx1_dJ_dx1)
-        print("dx1_dJ_dx1_check:", dx1_dJ_dx1_check)
-        assert torch.any(torch.abs(dx1_dJ_dx1_check - dx1_dJ_dx1)<=1e-4), f"dx1_dJ_dx1 is not accurate:\n value:{dx1_dJ_dx1},\n check:{dx1_dJ_dx1_check}"
+        # dx1_dJ_dx1_check = 2*(self.k**2-1)*f_X(x_0)
+        # for i in range(x_0.shape[0]):
+        #     current_x_0 = x_0[i]
+        #     current_x_1 = x_1[i]
+        #     integrand = ((y_1-current_x_1)*(current_x_1-x_2+2)**2 - (current_x_1-x_2))**2 * f_X(current_x_0)*f_W(y_1-current_x_1)
+        #     integral = torch.trapz(y=integrand[indices].reshape(integrand.shape[0], 1), x=y_1_integrating, dim=0)
+        #     dx1_dJ_dx1_check[i] = dx1_dJ_dx1_check[i] + integral
+        # print("dx1_dJ_dx1:", dx1_dJ_dx1)
+        # print("dx1_dJ_dx1_check:", dx1_dJ_dx1_check)
+        # assert torch.any(torch.abs(dx1_dJ_dx1_check - dx1_dJ_dx1)<=1e-4), f"dx1_dJ_dx1 is not accurate:\n value:{dx1_dJ_dx1},\n check:{dx1_dJ_dx1_check}"
         ############################################################################
         # print("dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
         # print("dx1_dJ_dx1 has nan:", torch.any(torch.isnan(dx1_dJ_dx1)))
