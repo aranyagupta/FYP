@@ -279,8 +279,12 @@ class WitsEnvLSA:
 
             # integrand at a fixed (float) value of x_0
             integrand = (2*(current_x_1-x_2) + (y_1-current_x_1) * (current_x_1-x_2)**2)*f_X(current_x_0)*f_W(y_1-current_x_1)
+            if torch.any(torch.isnan(integrand)):
+                print("integrand has nan")
             # computing integral over all y_1
             integral = torch.trapz(y=integrand[indices].reshape(integrand.shape[0], 1), x=y_1_integrating, dim=0)
+            if torch.any(torch.isnan(integral)):
+                print("integral has nan")
             dJ_dx1[i] = dJ_dx1[i] + integral
         
         # dJ/du_1[x_1, u_1](y_1) as in paper
@@ -301,7 +305,11 @@ class WitsEnvLSA:
             current_x_0 = x_0[i]
             current_x_1 = x_1[i]
             integrand = ((y_1-current_x_1)*(current_x_1-x_2+2)**2 - (current_x_1-x_2))**2 * f_X(current_x_0)*f_W(y_1-current_x_1)
+            if torch.any(torch.isnan(integrand)):
+                print("integrand has nan")
             integral = torch.trapz(integrand[indices].reshape(integrand.shape[0], 1), y_1_integrating, dim=0)
+            if torch.any(torch.isnan(integral)):
+                print("integral has nan")
             dx1_dJ_dx1[i] = dx1_dJ_dx1[i] + integral
 
         print("dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
