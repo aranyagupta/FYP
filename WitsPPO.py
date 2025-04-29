@@ -466,7 +466,7 @@ class WitsLSA:
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
-		self.lr = 1e-4 # lr used for all parameters of model, keep low
+		self.lr = 1e-3 # lr used for all parameters of model, keep low
 
 		self.N = N # num repetitions
 		self.r = r # local smoothing radius
@@ -487,7 +487,7 @@ class WitsLSA:
 					else:
 						gradients[i] = dJ_dx1[i]/torch.abs(dx1_dJ_dx1[i]) # positive as optimiser automatically performs descent
 				
-				print("gradients has nan:", torch.any(torch.isnan(gradients)))
+				# print("gradients has nan:", torch.any(torch.isnan(gradients)))
 				self.actor_c1_optim.zero_grad()
 				out.backward(gradient=gradients, retain_graph=True)
 				self.actor_c1_optim.step()
