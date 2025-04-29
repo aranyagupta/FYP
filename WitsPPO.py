@@ -483,10 +483,15 @@ class WitsLSA:
 				gradients = torch.zeros_like(dx1_dJ_dx1)
 				count = 0
 				gradients = dJ_dx1/torch.abs(dx1_dJ_dx1) 
-				for i in range(dx1_dJ_dx1.shape[0]):
-					if torch.abs(dx1_dJ_dx1[i]) <= 1e-6:
-						gradients[i] = self.tau * dJ_dx1[i] # positive as optimiser automatically handles gradient descent
-						count+=1
+				small_mask = torch.abs(dx1_dJ_dx1) <= 1e-6  
+				gradients[small_mask] = self.tau * dJ_dx1[small_mask]
+				count = small_mask.sum().item()
+				########## FOR LOOP IMPLEMENTATION - SLOW ####################
+				# for i in range(dx1_dJ_dx1.shape[0]):
+				# 	if torch.abs(dx1_dJ_dx1[i]) <= 1e-6:
+				# 		gradients[i] = self.tau * dJ_dx1[i] # positive as optimiser automatically handles gradient descent
+				# 		count+=1
+				########## FOR LOOP IMPLEMENTATION - SLOW ####################
 				print("gd count:", count)
 				
 				# print("gradients has nan:", torch.any(torch.isnan(gradients)))

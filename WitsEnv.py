@@ -226,20 +226,20 @@ class WitsEnvLSA:
             self.x_0 = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
             self.noise = torch.normal(0, 1, (100000, self.dims), device=self.device)
     
-    # generate u1(y1) for a given (single value of) y1, and large sample of x1(x0)
-    def generate_u1(self, y1, x1):
-        log_weights = -0.5 * (y1 - x1) ** 2 # Gaussian noise likelihood
-        weights = torch.exp(log_weights - torch.max(log_weights)) # numerical stability
-        weights = weights / torch.sum(weights) # normalisation
-        out = torch.sum(weights * x1)
-        return out
-
-    # same as above but for a tensor of y1
     def generate_u1_tensor(self, y1, x1):
-        t = torch.zeros_like(y1)
-        for element in range(y1.shape[0]):
-            t[element] = self.generate_u1(y1[element], x1)
-        return t
+        # y1: [N], x1: [N]
+        # Goal: For each y1[i], compute weighted sum over x1
+        # Expand y1 to [B, N], x1 to [B, N] via broadcasting
+        y1_exp = y1.unsqueeze(1)         # [N, 1]
+        x1_exp = x1.unsqueeze(0)         # [1, N]
+        
+        log_weights = -0.5 * (y1_exp - x1_exp) ** 2  # [N, N]
+        log_weights = log_weights - torch.max(log_weights, dim=1, keepdim=True).values  # stability
+        weights = torch.exp(log_weights)  # [N, N]
+        weights = weights / torch.sum(weights, dim=1, keepdim=True)  # normalize
+
+        out = torch.sum(weights * x1_exp, dim=1)  # [N]
+        return out
 
     def step_timesteps(self, actor_c1, actor_c2=None, timesteps=100000):
         # actor_c1 = x1(x0) in paper
@@ -273,37 +273,46 @@ class WitsEnvLSA:
 
         y_1_integrating, indices = torch.sort(y_1, dim=0)
         dJ_dx1 = 2*self.k**2*(x_1-x_0)*f_X(x_0)
-        # print("initial dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
-        for i in range(x_0.shape[0]):
-            current_x_0 = x_0[i]
-            current_x_1 = x_1[i]
 
-            # integrand at a fixed (float) value of x_0
-            integrand = (2*(current_x_1-x_2) + (y_1-current_x_1) * (current_x_1-x_2)**2)*f_X(current_x_0)*f_W(y_1-current_x_1)
-            # computing integral over all y_1
-            integral = torch.trapz(y=integrand[indices].reshape(integrand.shape[0], 1), x=y_1_integrating, dim=0)
-            dJ_dx1[i] = dJ_dx1[i] + integral
-        # dJ/du_1[x_1, u_1](y_1) as in paper
-        # same rough steps as above, integrating wrt x_0 instead
-        # here for completeness, not necessary for gradient calculation
+        x_0_exp = x_0.expand(x_0.shape[0], x_0.shape[0]).T
+        x_1_exp = x_1.expand(x_1.shape[0], x_1.shape[0]).T
 
-        # dJ_du1 = torch.zeros_like(x_0)
-        # for i in range(y_1.shape):
-        #     current_y_1 = y_1[i]
-        #     integrand = 2*(current_y_1 - x_1)*f_X(x_0)*f_W(current_y_1-x_1)
-        #     x_0_integrating, indices = torch.sort(x_0, dim=0)
-        #     integral = torch.trapz(integrand[indices], x_0_integrating, dim=0)
-        #     dJ_du1[i] = integral
+        integrand = (2*(x_1_exp-x_2) + (y_1-x_1_exp) * (x_1_exp-x_2)**2)*f_X(x_0_exp)*f_W(y_1-x_1_exp)
+        integrand_reshaped = integrand[:, indices].reshape(integrand.shape[0], integrand.shape[1])
+        integral = torch.trapz(y=integrand_reshaped, x=y_1_integrating, dim=0)
+        integral = integral.reshape(integral.shape[0], 1)
+        dJ_dx1 = dJ_dx1 + integral
+
+        ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
+        # # print("initial dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
+        # for i in range(x_0.shape[0]):
+        #     current_x_0 = x_0[i]
+        #     current_x_1 = x_1[i]
+
+        #     # integrand at a fixed (float) value of x_0
+        #     integrand = (2*(current_x_1-x_2) + (y_1-current_x_1) * (current_x_1-x_2)**2)*f_X(current_x_0)*f_W(y_1-current_x_1)
+        #     # computing integral over all y_1
+        #     integral = torch.trapz(y=integrand[indices].reshape(integrand.shape[0], 1), x=y_1_integrating, dim=0)
+        #     dJ_dx1[i] = dJ_dx1[i] + integral
+        ############################################################################
+
 
         # Partial derivative of dJ_dx1 wrt x_1, taken from paper
         dx1_dJ_dx1 = 2*(self.k**2-1)*f_X(x_0)
-        for i in range(x_0.shape[0]):
-            current_x_0 = x_0[i]
-            current_x_1 = x_1[i]
-            integrand = ((y_1-current_x_1)*(current_x_1-x_2+2)**2 - (current_x_1-x_2))**2 * f_X(current_x_0)*f_W(y_1-current_x_1)
-            integral = torch.trapz(integrand[indices].reshape(integrand.shape[0], 1), y_1_integrating, dim=0)
-            dx1_dJ_dx1[i] = dx1_dJ_dx1[i] + integral
+        integrand = ((y_1-x_1_exp)*(x_1_exp-x_2+2)**2 - (x_1_exp-x_2))**2 * f_X(x_0_exp)*f_W(y_1-x_1_exp)
+        integrand_reshaped = integrand[:, indices].reshape(integrand.shape[0], integrand.shape[1])
+        integral = torch.trapz(y=integrand_reshaped, x=y_1_integrating, dim=0)
+        dx1_dJ_dx1 = dx1_dJ_dx1 + integral
 
+         ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
+        # for i in range(x_0.shape[0]):
+        #     current_x_0 = x_0[i]
+        #     current_x_1 = x_1[i]
+        #     integrand = ((y_1-current_x_1)*(current_x_1-x_2+2)**2 - (current_x_1-x_2))**2 * f_X(current_x_0)*f_W(y_1-current_x_1)
+        #     integral = torch.trapz(integrand[indices].reshape(integrand.shape[0], 1), y_1_integrating, dim=0)
+        #     dx1_dJ_dx1[i] = dx1_dJ_dx1[i] + integral
+        ############################################################################
+        
         # print("dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
         # print("dx1_dJ_dx1 has nan:", torch.any(torch.isnan(dx1_dJ_dx1)))
         # print("x_0 has nan:", torch.any(torch.isnan(x_0)))
