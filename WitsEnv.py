@@ -271,20 +271,18 @@ class WitsEnvLSA:
         # fix x_0, sort y_1 and permute integrand correspondingly, then integrate using trapz
         # store result in dJ/dx_1, then add remaining constant part at the end
 
-        dJ_dx1 = torch.zeros_like(x_0)
+        y_1_integrating, indices = torch.sort(y_1, dim=0)
+        dJ_dx1 = 2*self.k**2*(x_1-x_0)*f_X(x_0)
         for i in range(x_0.shape[0]):
             current_x_0 = x_0[i]
             current_x_1 = x_1[i]
 
             # integrand at a fixed (float) value of x_0
             integrand = (2*(current_x_1-x_2) + (y_1-current_x_1) * (current_x_1-x_2)**2)*f_X(current_x_0)*f_W(y_1-current_x_1)
-            y_1_integrating, indices = torch.sort(y_1, dim=0)
             # computing integral over all y_1
             integral = torch.trapz(y=integrand[indices].reshape(integrand.shape[0], 1), x=y_1_integrating, dim=0)
-            dJ_dx1[i] = integral
+            dJ_dx1[i] = dJ_dx1[i] + integral
         
-        dJ_dx1 = dJ_dx1 + 2*self.k**2*(x_1-x_0)*f_X(x_0)
-
         # dJ/du_1[x_1, u_1](y_1) as in paper
         # same rough steps as above, integrating wrt x_0 instead
         # here for completeness, not necessary for gradient calculation
@@ -303,8 +301,7 @@ class WitsEnvLSA:
             current_x_0 = x_0[i]
             current_x_1 = x_1[i]
             integrand = ((y_1-current_x_1)*(current_x_1-x_2+2)**2 - (current_x_1-x_2))**2 * f_X(current_x_0)*f_W(y_1-current_x_1)
-            y_1_integrating, indices = torch.sort(y_1, dim=0)
-            integral = torch.trapz(integrand, y_1_integrating, dim=0)
+            integral = torch.trapz(integrand[indices].reshape(integrand.shape[0], 1), y_1_integrating, dim=0)
             dx1_dJ_dx1[i] = dx1_dJ_dx1[i] + integral
 
         return dJ_dx1, dx1_dJ_dx1, x_1, x_0

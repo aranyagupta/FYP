@@ -466,13 +466,15 @@ class WitsLSA:
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
-		self.lr = 0.01
+		self.lr = 1 # use tau, not lr, to control gradient descent step size (newton's method requires no step size) 
 
 		self.N = N # num repetitions
 		self.r = r # local smoothing radius
 		self.p = p # precision
+		self.tau = 1.0/5000.0 # grad descent step size
 
-		self.actor_c1_optim = Adam(self.actor_c1.parameters(), lr=self.lr)
+		self.actor_c1_optim = torch.optim.SGD(self.actor_c1.parameters(), lr=self.lr)
+		# SGD is a closer implementation to what we want to do
 
 	def train(self, timesteps, batches):
 		while True:
@@ -480,10 +482,10 @@ class WitsLSA:
 				dJ_dx1, dx1_dJ_dx1, out, x_0 = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps)
 				gradients = torch.zeros_like(dx1_dJ_dx1)
 				for i in range(dx1_dJ_dx1.shape[0]):
-					if dx1_dJ_dx1[i] <= 0.001:
-						gradients[i] = -self.lr*dJ_dx1[i]
+					if torch.abs(dx1_dJ_dx1[i]) <= 1e-4:
+						gradients[i] = self.tau * dJ_dx1[i] # positive as optimiser automatically performs descent
 					else:
-						gradients[i] = dJ_dx1[i]/torch.abs(dx1_dJ_dx1[i])
+						gradients[i] = dJ_dx1[i]/torch.abs(dx1_dJ_dx1[i]) # positive as optimiser automatically performs descent
 				
 				self.actor_c1_optim.zero_grad()
 				out.backward(gradients, retain_graph=True)
