@@ -283,14 +283,6 @@ class WitsEnvLSA:
         integral = integral.reshape(integral.shape[0], 1)
         dJ_dx1 = dJ_dx1 + integral
 
-        print("dJ_dx1.shape:",dJ_dx1.shape)
-        print("x_0_exp.shape:",x_0_exp.shape)
-        print("x_1_exp.shape:",x_1_exp.shape)
-        print("integrand.shape:",integrand.shape)
-        print("integral.shape:", integral.shape)
-        print("dJ_dx1.shape:",dJ_dx1.shape)
-
-
         ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
         # # print("initial dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
         # for i in range(x_0.shape[0]):
@@ -311,12 +303,6 @@ class WitsEnvLSA:
         integrand_reshaped = integrand[:, indices].reshape(integrand.shape[0], integrand.shape[1])
         integral = torch.trapz(y=integrand_reshaped, x=y_1_integrating, dim=0)
         dx1_dJ_dx1 = dx1_dJ_dx1 + integral
-        print("dx1_dJ_dx1.shape:",dJ_dx1.shape)
-        print("x_0_exp.shape:",x_0_exp.shape)
-        print("x_1_exp.shape:",x_1_exp.shape)
-        print("integrand.shape:",integrand.shape)
-        print("integral.shape:", integral.shape)
-        print("dx1_dJ_dx1.shape:",dJ_dx1.shape)
 
          ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
         # for i in range(x_0.shape[0]):
