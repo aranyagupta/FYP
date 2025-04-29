@@ -281,6 +281,11 @@ class WitsEnvLSA:
             # integrand at a fixed (float) value of x_0
             integrand = (2*(current_x_1-x_2) + (y_1-current_x_1) * (current_x_1-x_2)**2)*f_X(current_x_0)*f_W(y_1-current_x_1)
             if torch.any(torch.isnan(integrand)):
+                print("current_x_1-x_2:",current_x_1-x_2)
+                print("y_1-current_x_1:",current_x_1-x_2)
+                print("(current_x_1-x_2)**2:", (current_x_1-x_2)**2)
+                print("f_X(current_x_0):", f_X(current_x_0))
+                print("f_W(y_1-current_x_1):", f_W(y_1-current_x_1))
                 print("fst:", (2*(current_x_1-x_2) + (y_1-current_x_1) * (current_x_1-x_2)**2))
                 print("snd:", f_X(current_x_0)*f_W(y_1-current_x_1))
             # computing integral over all y_1
