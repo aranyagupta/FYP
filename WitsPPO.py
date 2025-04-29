@@ -466,7 +466,7 @@ class WitsLSA:
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
-		self.lr = 1e-2 # lr used for all parameters of model, keep low
+		self.lr = 1e-3 # lr used for all parameters of model, keep low
 
 		self.N = N # num repetitions
 		self.r = r # local smoothing radius
@@ -474,14 +474,13 @@ class WitsLSA:
 		self.tau = 1e-3 # grad descent step size
 
 		self.actor_c1_optim = torch.optim.Adam(self.actor_c1.parameters(), lr=self.lr)
-		# SGD is a closer implementation to what we want to do
-
+		
 	def train(self, timesteps, batches):
 		while True:
 			for i in range(self.N):
 				dJ_dx1, dx1_dJ_dx1, out, x_0 = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps)
 				gradients = dJ_dx1/torch.abs(dx1_dJ_dx1)
-				small_mask = torch.abs(dx1_dJ_dx1) <= 1e-6  
+				small_mask = torch.abs(dx1_dJ_dx1) <= 1e-6
 				gradients[small_mask] = self.tau * dJ_dx1[small_mask]
 				count = small_mask.sum().item()
 				########## FOR LOOP IMPLEMENTATION - SLOW ####################
