@@ -466,7 +466,7 @@ class WitsLSA:
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
-		self.lr = 1e-2 # lr used for all parameters of model, keep low
+		self.lr = 1e-3 # lr used for all parameters of model, keep low
 
 		self.N = N # num repetitions
 		self.r = r # local smoothing radius
