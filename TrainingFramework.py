@@ -100,7 +100,7 @@ class TrainingFramework:
                     else:
                         alg.train(100000, 1000)
                     
-                    loss = testEnv.step_timesteps(actor_c1, actor_c2, timesteps=100000)
+                    loss = testEnv.step_timesteps(actor_c1, actor_c2)
                     print("TEST LOSS:", loss)
 
                     while (loss < best_loss):
@@ -111,7 +111,7 @@ class TrainingFramework:
                         
                         best_loss = loss
                         alg.train(100000, 100)
-                        loss = testEnv.step_timesteps(actor_c1, actor_c2, timesteps=100000)
+                        loss = testEnv.step_timesteps(actor_c1, actor_c2)
                         print("TEST LOSS:", loss)
 
 

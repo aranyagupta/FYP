@@ -223,8 +223,8 @@ class WitsEnvLSA:
         self.dims = dims
 
         if self.mode == 'TEST':
-            self.x_0 = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
-            self.noise = torch.normal(0, 1, (100000, self.dims), device=self.device)
+            self.x_0 = torch.normal(0, self.sigma, (50000, self.dims), device=self.device)
+            self.noise = torch.normal(0, 1, (50000, self.dims), device=self.device)
     
     def generate_u1_tensor(self, y1, x1):
         # y1: [N], x1: [N]

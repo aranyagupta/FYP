@@ -26,10 +26,10 @@ DISPLAY_SYMBOLIC = False
 PLOT_GRAPHS = False
 
 if __name__ == "__main__":
-    min_hidden_layers = 2
-    max_hidden_layers = 2
-    min_layer_width = 4
-    max_layer_width = 6
+    min_hidden_layers = 1
+    max_hidden_layers = 1
+    min_layer_width = 6
+    max_layer_width = 8
 
     # kvals = torch.sqrt(torch.arange(0.05, 0.35, 0.05)).tolist()
     # sigvals = torch.sqrt(torch.arange(5.0, 45.0, 5.0)).tolist()
