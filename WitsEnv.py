@@ -280,16 +280,9 @@ class WitsEnvLSA:
 
             # integrand at a fixed (float) value of x_0
             integrand = (2*(current_x_1-x_2) + (y_1-current_x_1) * (current_x_1-x_2)**2)*f_X(current_x_0)*f_W(y_1-current_x_1)
-            if torch.any(torch.isnan(integrand)):
-                print("current_x_1-x_2:",current_x_1-x_2)
-                print("y_1-current_x_1:",current_x_1-x_2)
-                print("(current_x_1-x_2)**2:", (current_x_1-x_2)**2)
-                print("f_X(current_x_0):", f_X(current_x_0))
-                print("f_W(y_1-current_x_1):", f_W(y_1-current_x_1))
             # computing integral over all y_1
             integral = torch.trapz(y=integrand[indices].reshape(integrand.shape[0], 1), x=y_1_integrating, dim=0)
             dJ_dx1[i] = dJ_dx1[i] + integral
-        
         # dJ/du_1[x_1, u_1](y_1) as in paper
         # same rough steps as above, integrating wrt x_0 instead
         # here for completeness, not necessary for gradient calculation
@@ -313,24 +306,13 @@ class WitsEnvLSA:
 
         print("dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
         print("dx1_dJ_dx1 has nan:", torch.any(torch.isnan(dx1_dJ_dx1)))
-        print("x_1 has nan:", torch.any(torch.isnan(x_1)))
         print("x_0 has nan:", torch.any(torch.isnan(x_0)))
+        print("x_1 has nan:", torch.any(torch.isnan(x_1)))
+        print("x_1 max:", torch.max(x_1))
         print("x_2 has nan:", torch.any(torch.isnan(x_2)))
+        print("x_2 max:", torch.max(x_2))
         return dJ_dx1, dx1_dJ_dx1, x_1, x_0
-        
-            
-            
-
-        
-
-
-
-        
-        
-
-
-        
-        
+   
 
 # ----------------- Simplified Environments ----------------- #
 class WitsEnvSimple():

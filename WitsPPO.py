@@ -466,12 +466,12 @@ class WitsLSA:
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
-		self.lr = 0.5 # use tau, not lr, to control gradient descent step size (newton's method requires no step size) 
+		self.lr = 0.1 # should use lr of 1, but causes explosion for some reason
 
 		self.N = N # num repetitions
 		self.r = r # local smoothing radius
 		self.p = p # precision
-		self.tau = 1.0/5000.0 # grad descent step size
+		self.tau = 1.0/500.0 # grad descent step size (compenstaed by lr)
 
 		self.actor_c1_optim = torch.optim.SGD(self.actor_c1.parameters(), lr=self.lr)
 		# SGD is a closer implementation to what we want to do
