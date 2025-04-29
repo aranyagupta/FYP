@@ -299,9 +299,11 @@ class WitsEnvLSA:
 
         # Partial derivative of dJ_dx1 wrt x_1, taken from paper
         dx1_dJ_dx1 = 2*(self.k**2-1)*f_X(x_0)
+        print("initial dx1_dJ_dx1.shape in WitsEnv:", dx1_dJ_dx1.shape)
         integrand = ((y_1-x_1_exp)*(x_1_exp-x_2+2)**2 - (x_1_exp-x_2))**2 * f_X(x_0_exp)*f_W(y_1-x_1_exp)
         integrand_reshaped = integrand[:, indices].reshape(integrand.shape[0], integrand.shape[1])
         integral = torch.trapz(y=integrand_reshaped, x=y_1_integrating, dim=0)
+        print("integral.shape:", integral.shape)
         dx1_dJ_dx1 = dx1_dJ_dx1 + integral
         print("dx1_dJ_dx1.shape in WitsEnv:", dx1_dJ_dx1.shape)
 
