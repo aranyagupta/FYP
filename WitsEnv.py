@@ -259,10 +259,12 @@ class WitsEnvLSA:
         # x_2 = self.generate_u1_tensor(y_1, x_1)
 
         x_0 = torch.arange(-self.sigma, self.sigma, (2*self.sigma)/timesteps)
+        x_0 = x_0.reshape(x_0.shape[0], 1)
         x_1 = actor_c1(x_0)
         y_1 = torch.arange(-self.sigma, self.sigma, (2*self.sigma)/timesteps)
+        y_1 = y_1.reshape(y_1.shape[0], 1)
         x_2 = self.generate_u1_tensor(y_1, x_1)
-        
+
         # u1(y1) fixed, as it can be computed for arbitrary input using generate_u1_tensor
         # now, calculate gradient for x1(x0) using u1(y1)
         
