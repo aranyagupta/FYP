@@ -252,12 +252,17 @@ class WitsEnvLSA:
                 reward = (self.k**2 * (self.x_0 - x_1)**2 + (u_1-x_1)**2)
                 return reward.mean()
             
-        x_0 = torch.normal(0, self.sigma, (timesteps,1), device=self.device)
-        x_1 = actor_c1(x_0)
-        w = torch.normal(0, 1, (timesteps,self.dims), device=self.device)
-        y_1 = x_1 + w
-        x_2 = self.generate_u1_tensor(y_1, x_1)
+        # x_0 = torch.normal(0, self.sigma, (timesteps,1), device=self.device)
+        # x_1 = actor_c1(x_0)
+        # w = torch.normal(0, 1, (timesteps,self.dims), device=self.device)
+        # y_1 = x_1 + w
+        # x_2 = self.generate_u1_tensor(y_1, x_1)
 
+        x_0 = torch.arange(-self.sigma, self.sigma, (2*self.sigma)/timesteps)
+        x_1 = actor_c1(x_0)
+        y_1 = torch.arange(-self.sigma, self.sigma, (2*self.sigma)/timesteps)
+        x_2 = self.generate_u1_tensor(y_1, x_1)
+        
         # u1(y1) fixed, as it can be computed for arbitrary input using generate_u1_tensor
         # now, calculate gradient for x1(x0) using u1(y1)
         
