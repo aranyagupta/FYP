@@ -474,7 +474,7 @@ class WitsLSA:
 		self.tau = 1e-3 # grad descent step size
 
 		self.actor_c1_optim = torch.optim.Adam(self.actor_c1.parameters(), lr=self.lr)
-		self.scheduler = torch.optim.lr_scheduler.StepLR(self.actor_c1_optim, step_size=50, gamma=0.8)
+		self.scheduler = torch.optim.lr_scheduler.StepLR(self.actor_c1_optim, step_size=90, gamma=0.8)
 		
 	def train(self, timesteps, batches):
 		while True:
