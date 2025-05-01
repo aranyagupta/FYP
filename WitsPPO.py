@@ -462,7 +462,7 @@ class WitsAlternatingDescent:
 # Local Search Algorithm as described in this paper:
 # https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8264401	
 class WitsLSA:
-	def __init__(self, env, actor_c1, actor_c2=None, N=15, r=0.25, p=0.5e-3):
+	def __init__(self, env, actor_c1, actor_c2=None, N=15, r=0.25, p=1e-2):
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
