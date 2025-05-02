@@ -478,8 +478,8 @@ class WitsLSA:
 		
 	def train(self, timesteps, batches):
 		prior_stop_condition = 0
+		counter = 0
 		while True:
-			counter = 0
 			for i in range(self.N):
 				dJ_dx1, dx1_dJ_dx1, out, x_0 = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps)
 				gradients = dJ_dx1/torch.abs(dx1_dJ_dx1)
@@ -502,7 +502,7 @@ class WitsLSA:
 			stop_condition = torch.trapz(torch.abs(dJ_dx1[indices].reshape(dJ_dx1.shape[0], 1)), x_0_integrating, dim=0)
 			if torch.abs(prior_stop_condition - stop_condition) < 1e-4:
 				counter+=1
-				if counter == 90:
+				if counter >= 90:
 					break
 			else:
 				counter = 0
