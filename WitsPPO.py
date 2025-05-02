@@ -477,7 +477,9 @@ class WitsLSA:
 		self.scheduler = torch.optim.lr_scheduler.StepLR(self.actor_c1_optim, step_size=90, gamma=0.8)
 		
 	def train(self, timesteps, batches):
+		prior_stop_condition = 0
 		while True:
+			counter = 0
 			for i in range(self.N):
 				dJ_dx1, dx1_dJ_dx1, out, x_0 = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps)
 				gradients = dJ_dx1/torch.abs(dx1_dJ_dx1)
@@ -498,7 +500,12 @@ class WitsLSA:
 			# Skip smoothing step as it doesn't work nicely with KANs (doesn't produce clean update law)
 			x_0_integrating, indices = torch.sort(x_0, dim=0)
 			stop_condition = torch.trapz(torch.abs(dJ_dx1[indices].reshape(dJ_dx1.shape[0], 1)), x_0_integrating, dim=0)
+			if torch.abs(prior_stop_condition - stop_condition) < 1e-5:
+				counter+=1
+				if counter == 90:
+					break
 			print("STOP CONDITION:", stop_condition)
 			if stop_condition < self.p:
 				break
+			prior_stop_condition = stop_condition
 			self.scheduler.step()
