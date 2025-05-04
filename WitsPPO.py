@@ -462,7 +462,7 @@ class WitsAlternatingDescent:
 # Local Search Algorithm as described in this paper:
 # https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8264401	
 class WitsLSA:
-	def __init__(self, env, actor_c1, actor_c2=None, N=15, r=0.25, p=1e-2):
+	def __init__(self, env, actor_c1, actor_c2=None, N=15, r=0.25, p=1e-4):
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
@@ -474,7 +474,7 @@ class WitsLSA:
 		self.tau = 1e-3 # grad descent step size
 
 		self.actor_c1_optim = torch.optim.Adam(self.actor_c1.parameters(), lr=self.lr)
-		self.scheduler = torch.optim.lr_scheduler.StepLR(self.actor_c1_optim, step_size=90, gamma=0.8)
+		self.scheduler = torch.optim.lr_scheduler.StepLR(self.actor_c1_optim, step_size=100, gamma=0.9)
 		
 	def train(self, timesteps, batches):
 		prior_stop_condition = 0
