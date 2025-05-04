@@ -226,7 +226,8 @@ class WitsEnvLSA:
             self.x_0 = torch.normal(0, self.sigma, (40000, self.dims), device=self.device)
             self.noise = torch.normal(0, 1, (40000, self.dims), device=self.device)
     
-    def generate_u1_tensor(self, y1, x1):
+    # generate u_1 tensor from randomly generated x0
+    def generate_u1_tensor_random(self, y1, x1):
         # y1: [N], x1: [N]
         # Goal: For each y1[i], compute weighted sum over x1
         # Expand y1 to [B, N], x1 to [B, N] via broadcasting
@@ -240,6 +241,31 @@ class WitsEnvLSA:
 
         out = torch.sum(weights * x1_exp, dim=1)  # [N]
         return out
+    
+    # generate u1 tensor from non-randomly generated x0, x1
+    def generate_u1_tensor(self, y1, x1, x0):
+        f_X = lambda x : 1.0/(self.sigma* torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-x**2/(2*self.sigma**2))
+        f_W = lambda w : 1.0/(torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-w**2/(2))
+
+
+        x_0_integrating, indices = torch.sort(x0, dim=0)
+        sorted_indices = indices.squeeze(1)
+
+        y1_exp = y1.expand(y1.shape[0], y1.shape[0]).T
+        bottomIntegrand = f_X(x0)*f_W(y1_exp-x1)
+        bottomIntegrand_sorted = bottomIntegrand[sorted_indices, :]
+        bottomIntegral = torch.trapz(y=bottomIntegrand_sorted, x=x_0_integrating.squeeze(1), dim=0)
+
+        topIntegrand = x1*bottomIntegrand
+        topIntegrand_sorted = topIntegrand[sorted_indices, :]
+        topIntegral = torch.trapz(y=topIntegrand_sorted, x=x_0_integrating.squeeze(1), dim=0)
+
+        print("TOPINTEGRAL SHAPE:", topIntegral.shape)
+        print("BOTTOMINTEGRAL SHAPE:", bottomIntegral.shape)
+        u1 = topIntegral/bottomIntegral
+        return u1
+
+
 
     def step_timesteps(self, actor_c1, actor_c2=None, timesteps=100000):
         # actor_c1 = x1(x0) in paper
@@ -248,7 +274,7 @@ class WitsEnvLSA:
             with torch.no_grad():
                 x_1 = actor_c1(self.x_0)
                 y_1 = x_1 + self.noise
-                u_1 = self.generate_u1_tensor(y_1, x_1)
+                u_1 = self.generate_u1_tensor_random(y_1, x_1)
                 reward = (self.k**2 * (self.x_0 - x_1)**2 + (u_1-x_1)**2)
                 return reward.mean()
             
@@ -263,7 +289,7 @@ class WitsEnvLSA:
         x_1 = actor_c1(x_0)
         y_1 = torch.arange(-3*self.sigma, 3*self.sigma, (6*self.sigma)/timesteps)
         y_1 = y_1.reshape(y_1.shape[0], 1)
-        x_2 = self.generate_u1_tensor(y_1, x_1)
+        x_2 = self.generate_u1_tensor(y_1, x_1, x_0)
 
         # u1(y1) fixed, as it can be computed for arbitrary input using generate_u1_tensor
         # now, calculate gradient for x1(x0) using u1(y1)
