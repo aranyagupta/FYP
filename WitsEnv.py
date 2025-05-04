@@ -260,8 +260,6 @@ class WitsEnvLSA:
         topIntegrand_sorted = topIntegrand[sorted_indices, :]
         topIntegral = torch.trapz(y=topIntegrand_sorted, x=x_0_integrating.squeeze(1), dim=0)
 
-        print("TOPINTEGRAL SHAPE:", topIntegral.shape)
-        print("BOTTOMINTEGRAL SHAPE:", bottomIntegral.shape)
         u1 = topIntegral/bottomIntegral
         return u1
 
