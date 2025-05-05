@@ -289,7 +289,7 @@ class WitsEnvLSA:
                 x_0_exp = self.x_0.expand(self.x_0.shape[0], self.x_0.shape[0]).T
                 x_1_exp = x_1.expand(x_1.shape[0], x_1.shape[0]).T
 
-                second_integrand = (x_1_exp-u_1)**2*f_X(x_0_exp)*f_W(y_1-x_0_exp)
+                second_integrand = (x_1_exp-u_1)**2*f_X(x_0_exp)*f_W(self.y_1-x_0_exp)
                 subIntegral = torch.trapz(y_1=second_integrand[x_0_sorted_indices, :], x=x_0_integrating.squeeze(1), dim=0)
                 second_integral = torch.trapz(y_1=subIntegral[y_1_sorted_indices, :], x=y_1_integrating.squeeze(1), dim=0)
                 
