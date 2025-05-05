@@ -223,7 +223,7 @@ class WitsEnvLSA:
         self.dims = dims
 
         if self.mode == 'TEST':
-            TEST_TIMESTEPS = 40000
+            TEST_TIMESTEPS = 20000
             self.x_0 = torch.arange(-3*self.sigma, 3*self.sigma, (6*self.sigma)/TEST_TIMESTEPS)
             self.x_0 = self.x_0.reshape(self.x_0.shape[0], 1)
             self.y_1 = torch.arange(-3*self.sigma, 3*self.sigma, (6*self.sigma)/TEST_TIMESTEPS)
