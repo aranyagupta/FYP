@@ -224,16 +224,17 @@ class WitsEnvLSA:
 
         if self.mode == 'TEST':
             TEST_TIMESTEPS = 20000
-            self.x_0 = torch.arange(-3*self.sigma, 3*self.sigma, (6*self.sigma)/TEST_TIMESTEPS)
-            self.x_0 = self.x_0.reshape(self.x_0.shape[0], 1)
-            self.y_1 = torch.arange(-3*self.sigma, 3*self.sigma, (6*self.sigma)/TEST_TIMESTEPS)
-            self.y_1 = self.y_1.reshape(self.y_1.shape[0], 1)
-    
-    # generate u_1 tensor from randomly generated x0
+            self.x_0 = torch.normal(0, self.sigma, (TEST_TIMESTEPS,1))
+            self.noise = torch.normal(0, 1, (TEST_TIMESTEPS, 1))
+            
+    # generate u_1 tensor from randomly generated x0, given set of y1 values
     def generate_u1_tensor_random(self, y1, x1):
-        # y1: [N], x1: [N]
-        # Goal: For each y1[i], compute weighted sum over x1
-        # Expand y1 to [B, N], x1 to [B, N] via broadcasting
+        # uses importance sampling 
+        # the probability of finding y given a fixed x1 value is proportional to e^(-(y-x1)^2/2)
+        # (as w is distributed normally with mean 0 variance 1)
+        # we treat this probability as an importance weighting for that given value of y
+        # we then find the expected value across all values of x1 ie 1/N * sum across all x1 of e^(-(y-x1)^2/2)*x1
+        # to find the expected value of x1 | y = x1 + w
         y1_exp = y1.unsqueeze(1)         # [N, 1]
         x1_exp = x1.unsqueeze(0)         # [1, N]
         
@@ -245,11 +246,12 @@ class WitsEnvLSA:
         out = torch.sum(weights * x1_exp, dim=1)  # [N]
         return out
     
-    # generate u1 tensor from non-randomly generated x0, x1
+    # generate u1 tensor from non-randomly generated x0, x1, for a given set of y1 values
+    # this explicity calculates the required integrals then uses them to generate y1
+    # slower but less prone to noise than the random method
     def generate_u1_tensor(self, y1, x1, x0):
         f_X = lambda x : 1.0/(self.sigma* torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-x**2/(2*self.sigma**2))
         f_W = lambda w : 1.0/(torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-w**2/(2))
-
 
         x_0_integrating, indices = torch.sort(x0, dim=0)
         sorted_indices = indices.squeeze(1)
@@ -274,27 +276,10 @@ class WitsEnvLSA:
         if self.mode == 'TEST':
             with torch.no_grad():
                 x_1 = actor_c1(self.x_0)
-                u_1 = self.generate_u1_tensor(self.y_1, x_1, self.x_0)
-                f_X = lambda x : 1.0/(self.sigma* torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-x**2/(2*self.sigma**2))
-                f_W = lambda w : 1.0/(torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-w**2/(2))
-
-                x_0_integrating, x_0_indices = torch.sort(self.x_0, dim=0)
-                x_0_sorted_indices = x_0_indices.squeeze(1)
-
-                first_integrand = self.k**2*((x_1-self.x_0)**2 * f_X(self.x_0))
-                first_integral = torch.trapz(y=first_integrand[x_0_sorted_indices, :], x=x_0_integrating.squeeze(1), dim=0)
-
-                y_1_integrating, y_1_indices = torch.sort(self.y_1, dim=0)
-                y_1_sorted_indices = y_1_indices.squeeze(1)
-                x_0_exp = self.x_0.expand(self.x_0.shape[0], self.x_0.shape[0]).T
-                x_1_exp = x_1.expand(x_1.shape[0], x_1.shape[0]).T
-
-                second_integrand = (x_1_exp-u_1)**2*f_X(x_0_exp)*f_W(self.y_1-x_0_exp)
-                subIntegral = torch.trapz(y=second_integrand[x_0_sorted_indices, :], x=x_0_integrating.squeeze(1), dim=0)
-                subIntegral = subIntegral.reshape(subIntegral.shape[0], 1)
-                second_integral = torch.trapz(y=subIntegral[y_1_sorted_indices, :], x=y_1_integrating.squeeze(1), dim=0)
-
-                return first_integral + second_integral
+                y_1 = x_1 + self.noise
+                u_1 = self.generate_u1_tensor_random(y_1, x_1)
+                reward = self.k**2 * (self.x_0 - x_1)**2 + (u_1 - x_1)**2
+                return reward.mean()
             
         # x_0 = torch.normal(0, self.sigma, (timesteps,1), device=self.device)
         # x_1 = actor_c1(x_0)
