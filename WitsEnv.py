@@ -225,9 +225,9 @@ class WitsEnvLSA:
         if self.mode == 'TEST':
             TEST_TIMESTEPS = 40000
             self.x_0 = torch.arange(-3*self.sigma, 3*self.sigma, (6*self.sigma)/TEST_TIMESTEPS)
-            self.x_0.reshape(self.x_0.shape[0], 1)
+            self.x_0 = self.x_0.reshape(self.x_0.shape[0], 1)
             self.y_1 = torch.arange(-3*self.sigma, 3*self.sigma, (6*self.sigma)/TEST_TIMESTEPS)
-            self.y_1.reshape(self.y_1.shape[0], 1)
+            self.y_1 = self.y_1.reshape(self.y_1.shape[0], 1)
     
     # generate u_1 tensor from randomly generated x0
     def generate_u1_tensor_random(self, y1, x1):
