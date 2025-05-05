@@ -291,7 +291,7 @@ class WitsEnvLSA:
 
                 second_integrand = (x_1_exp-u_1)**2*f_X(x_0_exp)*f_W(self.y_1-x_0_exp)
                 subIntegral = torch.trapz(y=second_integrand[x_0_sorted_indices, :], x=x_0_integrating.squeeze(1), dim=0)
-                print("subIntegral.shape:", subIntegral.shape)
+                subIntegral = subIntegral.reshape(subIntegral.shape[0], 1)
                 second_integral = torch.trapz(y=subIntegral[y_1_sorted_indices, :], x=y_1_integrating.squeeze(1), dim=0)
                 
                 print("first_integral.shape:", first_integral.shape)
