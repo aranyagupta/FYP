@@ -462,7 +462,7 @@ class WitsAlternatingDescent:
 # Local Search Algorithm as described in this paper:
 # https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8264401	
 class WitsLSA:
-	def __init__(self, env, actor_c1, actor_c2=None, N=15, r=0.25, p=1e-3):
+	def __init__(self, env, actor_c1, actor_c2=None, N=15, r=0.25, p=1e-4):
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
@@ -500,7 +500,7 @@ class WitsLSA:
 			# Skip smoothing step as it doesn't work nicely with KANs (doesn't produce clean update law)
 			x_0_integrating, indices = torch.sort(x_0, dim=0)
 			stop_condition = torch.trapz(torch.abs(dJ_dx1[indices].reshape(dJ_dx1.shape[0], 1)), x_0_integrating, dim=0)
-			if torch.abs(prior_stop_condition - stop_condition) < 1e-4:
+			if torch.abs(prior_stop_condition - stop_condition) < self.p*0.1:
 				counter+=1
 				if counter >= 90:
 					break
