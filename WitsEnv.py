@@ -223,8 +223,11 @@ class WitsEnvLSA:
         self.dims = dims
 
         if self.mode == 'TEST':
-            self.x_0 = torch.normal(0, self.sigma, (40000, self.dims), device=self.device)
-            self.noise = torch.normal(0, 1, (40000, self.dims), device=self.device)
+            TEST_TIMESTEPS = 40000
+            self.x_0 = torch.arange(-3*self.sigma, 3*self.sigma, (6*self.sigma)/TEST_TIMESTEPS)
+            self.x_0.reshape(self.x_0.shape[0], 1)
+            self.y_1 = torch.arange(-3*self.sigma, 3*self.sigma, (6*self.sigma)/TEST_TIMESTEPS)
+            self.y_1.reshape(self.y_1.shape[0], 1)
     
     # generate u_1 tensor from randomly generated x0
     def generate_u1_tensor_random(self, y1, x1):
@@ -271,10 +274,29 @@ class WitsEnvLSA:
         if self.mode == 'TEST':
             with torch.no_grad():
                 x_1 = actor_c1(self.x_0)
-                y_1 = x_1 + self.noise
-                u_1 = self.generate_u1_tensor_random(y_1, x_1)
-                reward = (self.k**2 * (self.x_0 - x_1)**2 + (u_1-x_1)**2)
-                return reward.mean()
+                u_1 = self.generate_u1_tensor(self.y_1, x_1, self.x_0)
+                f_X = lambda x : 1.0/(self.sigma* torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-x**2/(2*self.sigma**2))
+                f_W = lambda w : 1.0/(torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-w**2/(2))
+
+                x_0_integrating, x_0_indices = torch.sort(self.x_0, dim=0)
+                x_0_sorted_indices = x_0_indices.squeeze(1)
+
+                first_integrand = self.k**2*((x_1-self.x_0)**2 * f_X(self.x_0))
+                first_integral = torch.trapz(y=first_integrand[x_0_sorted_indices, :], x=x_0_integrating.squeeze(1), dim=0)
+
+                y_1_integrating, y_1_indices = torch.sort(self.y_1, dim=0)
+                y_1_sorted_indices = y_1_indices.squeeze(1)
+                x_0_exp = self.x_0.expand(self.x_0.shape[0], self.x_0.shape[0]).T
+                x_1_exp = x_1.expand(x_1.shape[0], x_1.shape[0]).T
+
+                second_integrand = (x_1_exp-u_1)**2*f_X(x_0_exp)*f_W(y_1-x_0_exp)
+                subIntegral = torch.trapz(y_1=second_integrand[x_0_sorted_indices, :], x=x_0_integrating.squeeze(1), dim=0)
+                second_integral = torch.trapz(y_1=subIntegral[y_1_sorted_indices, :], x=y_1_integrating.squeeze(1), dim=0)
+                
+                print("first_integral.shape:", first_integral.shape)
+                print("second_integral.shape:", second_integral.shape)
+
+                return first_integral + second_integral
             
         # x_0 = torch.normal(0, self.sigma, (timesteps,1), device=self.device)
         # x_1 = actor_c1(x_0)
