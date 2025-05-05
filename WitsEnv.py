@@ -224,8 +224,8 @@ class WitsEnvLSA:
 
         if self.mode == 'TEST':
             TEST_TIMESTEPS = 20000
-            self.x_0 = torch.normal(0, self.sigma, (TEST_TIMESTEPS,1))
-            self.noise = torch.normal(0, 1, (TEST_TIMESTEPS, 1))
+            self.x_0 = torch.normal(0, self.sigma, (TEST_TIMESTEPS,1), device=self.device)
+            self.noise = torch.normal(0, 1, (TEST_TIMESTEPS, 1), device=self.device)
             
     # generate u_1 tensor from randomly generated x0, given set of y1 values
     def generate_u1_tensor_random(self, y1, x1):
