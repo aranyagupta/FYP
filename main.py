@@ -28,12 +28,12 @@ PLOT_GRAPHS = False
 if __name__ == "__main__":
     min_hidden_layers = 1
     max_hidden_layers = 1
-    min_layer_width = 4
-    max_layer_width = 6
+    min_layer_width = 6
+    max_layer_width = 8
 
     # kvals = torch.sqrt(torch.arange(0.05, 0.35, 0.05)).tolist()
     # sigvals = torch.sqrt(torch.arange(5.0, 45.0, 5.0)).tolist()
-    kvals = torch.arange(0.1, 1.1, 0.1)
+    kvals = torch.arange(0.1, 0.6, 0.1)
     sigvals = [5.0]
     kan_hyps = []
     for num_layers in range(min_hidden_layers, max_hidden_layers+1):
