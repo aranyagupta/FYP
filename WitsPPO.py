@@ -499,4 +499,6 @@ class WitsLSA:
 			x_0_integrating, indices = torch.sort(x_0, dim=0)
 			stop_condition = torch.trapz(torch.abs(dJ_dx1[indices].reshape(dJ_dx1.shape[0], 1)), x_0_integrating, dim=0)
 			print("STOP CONDITION:", stop_condition)
+			if stop_condition < self.p:
+				break
 			self.scheduler.step()
