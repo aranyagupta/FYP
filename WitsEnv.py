@@ -390,8 +390,8 @@ class WitsEnvFGD:
 
 
         # x0 = torch.normal(0, self.sigma, (timesteps, 1), device=self.device)
-        x0 = torch.arange(-3*self.sigma, 3*self.sigma, timesteps)
-        x0 = x0.reshape((timesteps, 1))
+        x0 = torch.arange(-3*self.sigma, 3*self.sigma, 6*self.sigma/(timesteps))
+        x0 = x0.reshape((x0.shape[0], 1))
 
         ones = torch.ones_like(x0, device=self.device)
         # calculates mu_1(x0) and dmu_1(y)/dy at y = x0
@@ -403,7 +403,7 @@ class WitsEnvFGD:
 
 
         # noise = torch.normal(0, 1, (timesteps, 1), device=self.device)
-        noise = torch.arange(-3.0, 3.0, timesteps)
+        noise = torch.arange(-3.0, 3.0, 6.0/timesteps)
         noise = noise.reshape((noise.shape[0], 1))
         y2 = x1 + noise
 
