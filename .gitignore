@@ -180,3 +180,5 @@ wits_models_storage_LAG_oddconstraint/
 constrained_experiments/
 witsenhausen_preinit_loss/
 witsenhausen_preinit_models/
+LSA_loss/
+LSA_models/
