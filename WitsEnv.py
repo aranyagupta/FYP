@@ -396,6 +396,10 @@ class WitsEnvFGD:
         ones = torch.ones_like(x0, device=self.device)
         # calculates mu_1(x0) and dmu_1(y)/dy at y = x0
         x1, dmu_1_dx = torch.func.jvp(mu_1, (x0,), (ones,))
+        print("x1 has nan:", torch.any(torch.isnan(x1)))
+        print("x1 has inf:", torch.any(torch.isinf(x1)))
+        print("dmu_1_dx has nan:", torch.any(torch.isnan(dmu_1_dx)))
+        print("dmu_1_dx has inf:", torch.any(torch.isinf(dmu_1_dx)))
 
 
         # noise = torch.normal(0, 1, (timesteps, 1), device=self.device)
@@ -403,9 +407,15 @@ class WitsEnvFGD:
         noise = noise.reshape((noise.shape[0], 1))
         y2 = x1 + noise
 
+
         # calculates mu_2(y2) and dmu_2(y)/dy at y = mu_1(x)+eta
         x2, dmu_2_dy = torch.func.jvp(mu_2, (y2,), (ones,))
         
+        print("x2 has nan:", torch.any(torch.isnan(x2)))
+        print("x2 has inf:", torch.any(torch.isinf(x2)))
+        print("dmu_2_dy has nan:", torch.any(torch.isnan(dmu_2_dy)))
+        print("dmu_2_dy has inf:", torch.any(torch.isinf(dmu_2_dy)))
+
         # calculates dmu_2(y)/dy at y = x0
         dmu_2_dx = torch.func.jvp(mu_2, (x0,), (ones,))[1]
 
@@ -422,6 +432,9 @@ class WitsEnvFGD:
         frechet_grad_1 = frechet_grad_1*f_X(x0)
         frechet_grad_2 = 2*(x1 - x2)*(1-dmu_2_dy)*dmu_1_dmu_2
         frechet_grad_2 = frechet_grad_2*f_X(x0)*f_W(noise)
+
+        print("frechet_grad_1 has nan:", torch.any(torch.isnan(frechet_grad_1)))
+        print("frechet_grad_2 has inf:", torch.any(torch.isinf(frechet_grad_2)))
 
         J = 0
         with torch.no_grad():
