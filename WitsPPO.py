@@ -205,7 +205,7 @@ class WitsFGD:
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
-		self.lr = 1e-3 # small learning rate
+		self.lr = 1e-4 # small learning rate
 
 		self.actor_c1_optim = Adam(self.actor_c1.parameters(), lr=self.lr)
 		self.actor_c2_optim = Adam(self.actor_c2.parameters(), lr=self.lr)
