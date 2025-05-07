@@ -14,7 +14,6 @@ print(device)
 torch.set_default_device(device=device)
 
 TRAIN_DGD = False
-TRAIN_PPO = False
 TRAIN_DGDCOMB = False
 TRAIN_ALTERNATING = False
 TRAIN_LAG = False
@@ -50,12 +49,6 @@ if __name__ == "__main__":
         gradDesc = WitsPPO.WitsGradDesc
         modelType = 'DGD'
         f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda sigma, x : sigma * torch.sign(x), prefit_func_2=lambda sigma, x: sigma*torch.tanh(sigma*x))
-    if TRAIN_PPO:
-        kanType = CombinedKan.CombinedKan
-        env = WitsEnv.WitsEnvCombined
-        gradDesc = WitsPPO.WitsPPOCombined
-        modelType = 'PPO'
-        f.train_framework(kanType, env, gradDesc, modelType)
     if TRAIN_DGDCOMB:
         kanType = CombinedKan.CombinedKan
         env = WitsEnv.WitsEnvCombined

@@ -13,15 +13,6 @@ import torch.nn as nn
 from torch.optim import Adam
 from torch.distributions import MultivariateNormal
 
-
-"""
-	The file contains the PPO class to train with.
-	NOTE: All "ALG STEP"s are following the numbers from the original PPO pseudocode.
-			It can be found here: https://spinningup.openai.com/en/latest/_images/math/e62a8971472597f4b014c2da064f636ffe365ba3.svg
-"""
-
-
-# PPO for full Witsenhausen counterexample
 torch.set_default_dtype(torch.float32)
 
 class WitsGradDesc:
