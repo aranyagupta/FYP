@@ -395,12 +395,9 @@ class WitsEnvFGD:
 
         ones = torch.ones_like(x0, device=self.device)
         # calculates mu_1(x0) and dmu_1(y)/dy at y = x0
-        x1, dmu_1_dx = torch.func.jvp(mu_1, (x0,), (ones,))
+        x1 = mu_1(x0)
         print("x1 has nan:", torch.any(torch.isnan(x1)))
         print("x1 has inf:", torch.any(torch.isinf(x1)))
-        print("dmu_1_dx has nan:", torch.any(torch.isnan(dmu_1_dx)))
-        print("dmu_1_dx has inf:", torch.any(torch.isinf(dmu_1_dx)))
-
 
         # noise = torch.normal(0, 1, (timesteps, 1), device=self.device)
         noise = torch.linspace(-3.0, 3.0, timesteps)
@@ -416,21 +413,14 @@ class WitsEnvFGD:
         print("dmu_2_dy has nan:", torch.any(torch.isnan(dmu_2_dy)))
         print("dmu_2_dy has inf:", torch.any(torch.isinf(dmu_2_dy)))
 
-        # calculates dmu_2(y)/dy at y = x0
-        dmu_2_dx = torch.func.jvp(mu_2, (x0,), (ones,))[1]
-
-        # calculates dmu_1(y)/dmu_2(y) at y = x0 through
-        # dmu_1(y)/dmu_2(y) = dmu_1(y)/dy / (dmu_2/dy) | y = x0
-        dmu_1_dmu_2 = dmu_1_dx / dmu_2_dx
-
-
-         # x0 distribution pdf
+        # x0 distribution pdf
         f_X = lambda x : 1.0/(self.sigma* torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-x**2/(2*self.sigma**2))
         # w distribution pdf
         f_W = lambda w : 1.0/(torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-w**2/(2))
+
         frechet_grad_1 = 2*self.k**2*(x1-x0) + 2*(x1-x2)*(1-dmu_2_dy)
         frechet_grad_1 = frechet_grad_1*f_X(x0)
-        frechet_grad_2 = 2*(x1 - x2)*(1-dmu_2_dy)*dmu_1_dmu_2
+        frechet_grad_2 = 2*(x1 - x2)*(-dmu_2_dy)
         frechet_grad_2 = frechet_grad_2*f_X(x0)*f_W(noise)
 
         print("frechet_grad_1 has nan:", torch.any(torch.isnan(frechet_grad_1)))
@@ -438,7 +428,7 @@ class WitsEnvFGD:
 
         J = 0
         with torch.no_grad():
-            J = self.k**2*(x1-x0)**2 + (x2-x1)**2 
+            J = self.k**2*(x1-x0)**2*f_X(x0) + (x2-x1)**2*f_W(noise)*f_X(x0) 
             J = J.mean()
 
         return frechet_grad_1, frechet_grad_2, x1, x2, J 
