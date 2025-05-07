@@ -18,7 +18,8 @@ TRAIN_PPO = False
 TRAIN_DGDCOMB = False
 TRAIN_ALTERNATING = False
 TRAIN_LAG = False
-TRAIN_LSA = True
+TRAIN_LSA = False
+TRAIN_FGD = True
 
 DISPLAY_HEATMAP = False
 DISPLAY_SYMBOLIC = False
@@ -79,6 +80,12 @@ if __name__ == "__main__":
         gradDesc = WitsPPO.WitsLSA
         modelType="LSA"
         f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda x : x)
+    if TRAIN_FGD:
+        kanType = kan.KAN
+        env = WitsEnv.WitsEnvFGD
+        gradDesc = WitsPPO.WitsFGD
+        modelType = "FGD"
+        f.train_framework(kanType, env, gradDesc, modelType)
 
     if DISPLAY_HEATMAP:
         hyps =  [[1,0],[2,0],[2,0],[2,0],[1,0]]

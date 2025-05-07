@@ -360,12 +360,70 @@ class WitsEnvLSA:
         return dJ_dx1, dx1_dJ_dx1, x_1, x_0
    
 
+# implements an environment for the Frechet Gradient Method (NOT Frechet Discrete Gradient)
+class WitsEnvFGD:
+    def __init__(self, k, sigma, dims, device, mode='TRAIN'):
+        self.k = k
+        self.sigma = sigma
+        self.device =  device
+        self.mode = mode
+        if mode == 'TEST':
+            TEST_TIMESTEPS = 20000
+            self.x_0 = torch.normal(0, self.sigma, (TEST_TIMESTEPS,1))
+            self.noise = torch.normal(0, 1, (TEST_TIMESTEPS, 1))
+
+    def step_timesteps(self, actor_c1, actor_c2, timesteps=10000):
+        if self.mode == 'TEST':
+            x1 = actor_c1(self.x_0)
+            y1 = self.noise + x1
+            x2 = actor_c2(y1)
+
+            reward = self.k**2 * (x1 - self.x_0) ** 2 + (x2-x1)**2
+            return reward.mean()
+
+        # wrap to allow jacobian vector product to work
+        def mu_1(x):
+            return actor_c1(x)
+        
+        def mu_2(x):
+            return actor_c2(x)
+
+
+        x0 = torch.normal(0, self.sigma, (timesteps, 1), device=self.device)
+        ones = torch.ones_like(x0, device=self.device)
+        # calculates mu_1(x0) and dmu_1(y)/dy at y = x0
+        x1, dmu_1_dx = torch.func.jvp(mu_1, (x0,), (ones,))
+
+
+        noise = torch.normal(0, 1, (timesteps, 1), device=self.device)
+        y2 = x1 + noise
+
+        # calculates mu_2(y2) and dmu_2(y)/dy at y = mu_1(x)+eta
+        x2, dmu_2_dy = torch.func.jvp(mu_2, (y2,), (ones,))
+        
+        # calculates dmu_2(y)/dy at y = x0
+        dmu_2_dx = torch.func.jvp(mu_2, (x0,), (ones,))[1]
+
+        # calculates dmu_1(y)/dmu_2(y) at y = x0 through
+        # dmu_1(y)/dmu_2(y) = dmu_1(y)/dy / (dmu_2/dy) | y = x0
+        dmu_1_dmu_2 = dmu_1_dx / dmu_2_dx
+
+        frechet_grad_1 = 2*self.k**2*(x1-x0) + 2*(x1-x2)*(1-dmu_2_dy)
+        frechet_grad_2 = 2*(x1 - x2)*(1-dmu_2_dy)*dmu_1_dmu_2
+
+        J = 0
+        with torch.no_grad():
+            J = self.k**2*(x1-x0)**2 + (x2-x1)**2 
+            J = J.mean()
+
+        return frechet_grad_1, frechet_grad_2, x1, x2, J 
+
 # ----------------- Simplified Environments ----------------- #
 class WitsEnvSimple():
     '''
         Initialises a simplified Witsenhausen Counterexample environment
         requiring only the first controller and a fixed, known input
-        Used to test if PPO and KAN can actually learn an arbitrary function,
+        Used to test if KAN can actually learn an arbitrary function,
         as the optimal controller here should have 0 loss
         k: Witsenhausen cost parameter
         sigma: standard dev of x_0
