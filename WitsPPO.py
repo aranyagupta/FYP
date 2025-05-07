@@ -210,7 +210,7 @@ class WitsFGD:
 		self.actor_c1_optim = Adam(self.actor_c1.parameters(), lr=self.lr)
 		self.actor_c2_optim = Adam(self.actor_c2.parameters(), lr=self.lr)
 
-	def train(self, timesteps, batches=0):
+	def train(self, timesteps, batches):
 		# print("batch:", batch)
 		for batch in range(batches):
 			gradient_1, gradient_2, out_1, out_2, J = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps=timesteps)
