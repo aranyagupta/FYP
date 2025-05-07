@@ -369,8 +369,8 @@ class WitsEnvFGD:
         self.mode = mode
         if mode == 'TEST':
             TEST_TIMESTEPS = 20000
-            self.x_0 = torch.normal(0, self.sigma, (TEST_TIMESTEPS,1))
-            self.noise = torch.normal(0, 1, (TEST_TIMESTEPS, 1))
+            self.x_0 = torch.normal(0, self.sigma, (TEST_TIMESTEPS,1), device=self.device)
+            self.noise = torch.normal(0, 1, (TEST_TIMESTEPS, 1), device=self.device)
 
     def step_timesteps(self, actor_c1, actor_c2, timesteps=10000):
         if self.mode == 'TEST':
@@ -428,7 +428,7 @@ class WitsEnvFGD:
 
         J = 0
         with torch.no_grad():
-            J = self.k**2*(x1-x0)**2*f_X(x0) + (x2-x1)**2*f_W(noise)*f_X(x0) 
+            J = self.k**2*(x1-x0)**2 + (x2-x1)**2
             J = J.mean()
 
         return frechet_grad_1, frechet_grad_2, x1, x2, J 
