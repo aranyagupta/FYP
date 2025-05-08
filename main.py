@@ -17,8 +17,8 @@ TRAIN_DGD = False
 TRAIN_DGDCOMB = False
 TRAIN_ALTERNATING = False
 TRAIN_LAG = False
-TRAIN_LSA = False
-TRAIN_FGD = True
+TRAIN_LSA = True
+TRAIN_FGD = False
 
 DISPLAY_HEATMAP = False
 DISPLAY_SYMBOLIC = False
@@ -28,8 +28,8 @@ PLOT_GRAPHS = False
 if __name__ == "__main__":
     min_hidden_layers = 1
     max_hidden_layers = 1
-    min_layer_width = 6
-    max_layer_width = 8
+    min_layer_width = 8
+    max_layer_width = 10
 
     # kvals = torch.sqrt(torch.arange(0.05, 0.35, 0.05)).tolist()
     # sigvals = torch.sqrt(torch.arange(5.0, 45.0, 5.0)).tolist()
@@ -96,11 +96,11 @@ if __name__ == "__main__":
         create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title=f"{modelType} {[x[0] for x in hyps]} Model Costs (Area constraint)")
     
     if DISPLAY_SYMBOLIC:
-        hyps = [[1,0],[2,0],[2,0],[2,0],[1,0]]
+        hyps = [[1,0],[6,0],[1,0]]
 
         # LINEAR (UNINTENTIONAL - SHOULD BE 3-STEP)
-        k = 0.22
-        sigma = "2.24"  
+        k = "0.20"
+        sigma = "5.00"  
 
         # 3 STEP: TBF
         # k = 0.22
@@ -110,9 +110,9 @@ if __name__ == "__main__":
         # k = 0.39
         # sigma = 3.87
 
-        modelType = 'LAG'
+        modelType = 'LSA'
         
-        name = f"constrained_experiments/lag_constrained_area_and_origin_models/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
+        name = f"LSA_models/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
         actor_c1 = kan.KAN.loadckpt(name+"c1")
         actor_c2 = kan.KAN.loadckpt(name+"c2")
         act_fun_c1 = actor_c1.act_fun
@@ -124,8 +124,8 @@ if __name__ == "__main__":
             # actor_c2.plot()
             # plt.show()
         
-            plot_model_bruteforce(actor_c1, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C1, k={k}, sig={sigma}, {modelType} Wits Preinit")
-            plot_model_bruteforce(actor_c2, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C2, k={k}, sig={sigma}, {modelType} Wits Preinit")
+            plot_model_bruteforce(actor_c1, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C1, k={k}, sig={sigma}, {modelType}")
+            plot_model_bruteforce(actor_c2, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C2, k={k}, sig={sigma}, {modelType}")
 
 
         # individual_functions_c1 = individual_kanlayers(act_fun_c1)
