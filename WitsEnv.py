@@ -439,7 +439,7 @@ class WitsEnvFGD:
 
         frechet_grad_1 = 2*self.k**2*(x1-x0) + 2*(x1-x2)*(1-dmu_2_dy)
         # frechet_grad_1 = frechet_grad_1*f_X(x0)
-        frechet_grad_2 = -2*(x1 - x2)*(dmu_2_dy*dmu_1_dy/dmu_2_dx)
+        frechet_grad_2 = -2*(x1 - x2)
         # frechet_grad_2 = frechet_grad_2*f_X(x0)*f_W(noise)
 
         if torch.any(torch.isnan(frechet_grad_2)):
