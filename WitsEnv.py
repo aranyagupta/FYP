@@ -432,11 +432,6 @@ class WitsEnvFGD:
         if torch.any(torch.isinf(dmu_2_dx)):
             print("dmu_2_dx has inf")
         
-        # x0 distribution pdf
-        f_X = lambda x : 1.0/(self.sigma* torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-x**2/(2*self.sigma**2))
-        # w distribution pdf
-        f_W = lambda w : 1.0/(torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-w**2/(2))
-
         frechet_grad_1 = 2*self.k**2*(x1-x0) + 2*(x1-x2)*(1-dmu_2_dy)
         # frechet_grad_1 = frechet_grad_1*f_X(x0)
         frechet_grad_2 = -2*(x1 - x2)
@@ -449,7 +444,7 @@ class WitsEnvFGD:
 
         J = 0
         with torch.no_grad():
-            J = self.k**2*(x1-x0)**2 + (x2-x1)**2*f_X(x0)
+            J = self.k**2*(x1-x0)**2 + (x2-x1)**2
             J = J.mean()
 
         return frechet_grad_1, frechet_grad_2, x1, x2, J 
