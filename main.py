@@ -72,7 +72,7 @@ if __name__ == "__main__":
         env = WitsEnv.WitsEnvLSA
         gradDesc = WitsPPO.WitsLSA
         modelType="LSA"
-        f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda x : x)
+        f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda x : torch.floor(x))
     if TRAIN_FGD:
         kanType = kan.KAN
         env = WitsEnv.WitsEnvFGD
