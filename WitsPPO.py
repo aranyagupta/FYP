@@ -205,7 +205,8 @@ class WitsFGD:
 		self.env = env
 		self.actor_c1 = actor_c1
 		self.actor_c2 = actor_c2
-		self.lr = 1e-4 # small learning rate
+		self.lr = 1e-3 # small learning rate for model params
+		self.tau = 1e-3 # tau as defined in paper, scaling factor for gradient
 
 		self.actor_c1_optim = Adam(self.actor_c1.parameters(), lr=self.lr)
 		self.actor_c2_optim = Adam(self.actor_c2.parameters(), lr=self.lr)
@@ -218,8 +219,8 @@ class WitsFGD:
 			self.actor_c1_optim.zero_grad()
 			self.actor_c2_optim.zero_grad()
 
-			out_1.backward(gradient=gradient_1, retain_graph=True)
-			out_2.backward(gradient=gradient_2, retain_graph=True)
+			out_1.backward(gradient=self.tau*gradient_1, retain_graph=True)
+			out_2.backward(gradient=self.tau*gradient_2, retain_graph=True)
 
 			self.actor_c2_optim.step()
 			self.actor_c1_optim.step()

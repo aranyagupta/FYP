@@ -395,9 +395,16 @@ class WitsEnvFGD:
 
         ones = torch.ones_like(x0, device=self.device)
         # calculates mu_1(x0) and dmu_1(y)/dy at y = x0
-        x1 = mu_1(x0)
-        print("x1 has nan:", torch.any(torch.isnan(x1)))
-        print("x1 has inf:", torch.any(torch.isinf(x1)))
+        x1, dmu_1_dy = torch.func.jvp(mu_1, (x0,), (ones,))
+        if torch.any(torch.isnan(x1)):
+            print("x1 has nan")
+        if torch.any(torch.isinf(x1)):
+            print("x1 has inf")
+
+        if torch.any(torch.isnan(dmu_1_dy)):
+            print("dmu_1_dy has nan")
+        if torch.any(torch.isinf(dmu_1_dy)):
+            print("dmu_1_dy has inf")
 
         # noise = torch.normal(0, 1, (timesteps, 1), device=self.device)
         noise = torch.linspace(-3.0, 3.0, timesteps)
@@ -405,14 +412,26 @@ class WitsEnvFGD:
         y2 = x1 + noise
 
 
-        # calculates mu_2(y2) and dmu_2(y)/dy at y = mu_1(x)+eta
+        # calculates mu_2(y2) and dmu_2(y)/dy at y = mu_1(x0)+eta
         x2, dmu_2_dy = torch.func.jvp(mu_2, (y2,), (ones,))
-        
-        print("x2 has nan:", torch.any(torch.isnan(x2)))
-        print("x2 has inf:", torch.any(torch.isinf(x2)))
-        print("dmu_2_dy has nan:", torch.any(torch.isnan(dmu_2_dy)))
-        print("dmu_2_dy has inf:", torch.any(torch.isinf(dmu_2_dy)))
+        # calculates dmu_2(y)/dy at y=x0
+        _, dmu_2_dx = torch.func.jvp(mu_2, (x0,), (ones,))
 
+        if torch.any(torch.isnan(x2)):
+            print("x2 has nan")
+        if torch.any(torch.isinf(x2)):
+            print("x2 has inf")
+
+        if torch.any(torch.isnan(dmu_2_dy)):
+            print("dmu_2_dy has nan")
+        if torch.any(torch.isinf(dmu_2_dy)):
+            print("dmu_2_dy has inf")
+
+        if torch.any(torch.isnan(dmu_2_dx)):
+            print("dmu_2_dx has nan")
+        if torch.any(torch.isinf(dmu_2_dx)):
+            print("dmu_2_dx has inf")
+        
         # x0 distribution pdf
         f_X = lambda x : 1.0/(self.sigma* torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-x**2/(2*self.sigma**2))
         # w distribution pdf
@@ -420,15 +439,17 @@ class WitsEnvFGD:
 
         frechet_grad_1 = 2*self.k**2*(x1-x0) + 2*(x1-x2)*(1-dmu_2_dy)
         frechet_grad_1 = frechet_grad_1*f_X(x0)
-        frechet_grad_2 = 2*(x1 - x2)*(-dmu_2_dy)
+        frechet_grad_2 = -2*(x1 - x2)*(dmu_2_dy*dmu_1_dy/dmu_2_dx)
         frechet_grad_2 = frechet_grad_2*f_X(x0)*f_W(noise)
 
-        print("frechet_grad_1 has nan:", torch.any(torch.isnan(frechet_grad_1)))
-        print("frechet_grad_2 has inf:", torch.any(torch.isinf(frechet_grad_2)))
+        if torch.any(torch.isnan(frechet_grad_2)):
+            print("frechet_grad_2 has nan")
+        if torch.any(torch.isinf(frechet_grad_2)):
+            print("frechet_grad_2 has inf")
 
         J = 0
         with torch.no_grad():
-            J = self.k**2*(x1-x0)**2 + (x2-x1)**2
+            J = self.k**2*(x1-x0)**2*f_X(x0) + (x2-x1)**2*f_X(x0)*f_W(noise)
             J = J.mean()
 
         return frechet_grad_1, frechet_grad_2, x1, x2, J 
