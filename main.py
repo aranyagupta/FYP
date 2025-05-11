@@ -17,8 +17,8 @@ TRAIN_DGD = False
 TRAIN_DGDCOMB = False
 TRAIN_ALTERNATING = False
 TRAIN_LAG = False
-TRAIN_LSA = False
-TRAIN_FGD = True
+TRAIN_LSA = True
+TRAIN_FGD = False
 
 DISPLAY_HEATMAP = False
 DISPLAY_SYMBOLIC = False
@@ -27,7 +27,7 @@ PLOT_GRAPHS = False
 
 if __name__ == "__main__":
     min_hidden_layers = 1
-    max_hidden_layers = 2
+    max_hidden_layers = 1
     min_layer_width = 10
     max_layer_width = 12
 
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         env = WitsEnv.WitsEnvLSA
         gradDesc = WitsPPO.WitsLSA
         modelType="LSA"
-        f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda x : torch.floor(x))
+        f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda sigma, x : sigma * torch.sign(x))
     if TRAIN_FGD:
         kanType = kan.KAN
         env = WitsEnv.WitsEnvFGD
