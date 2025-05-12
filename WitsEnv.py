@@ -207,7 +207,7 @@ class WitsEnvLSA(WitsEnvSuper):
         log_weights = -0.5 * (y2_exp - x1) ** 2 
         weights = 1/(torch.sqrt(torch.tensor(2*torch.pi, device=self.device)))*torch.exp(log_weights) 
 
-        out = torch.sum(weights * x1, dim=0)
+        out = torch.sum(weights * x1, dim=1)
         out = out.reshape(out.shape[0], 1)
         return out
     
