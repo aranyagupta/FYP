@@ -15,7 +15,8 @@ configs = [
         "trainer":WitsPPO.WitsLSA,
         "modelType":"LSA",
         "prefit_func_1": lambda sigma, x : sigma*torch.sign(x),
-        "prefit_func_2": None
+        "prefit_func_2": None,
+        "lr":0.01,
     }
 ]
 

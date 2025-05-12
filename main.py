@@ -26,7 +26,7 @@ if __name__ == "__main__":
     if mode.lower() == "train":
         for c in config.configs:
             f = TrainingFramework.TrainingFramework(k_range=c["kvals"], sigma_range=c["sigvals"], KAN_hyps=c["kanHyps"])
-            f.train_framework(c["kanType"], c["env"], c["trainer"], c["modelType"], prefit_func_1=c["prefit_func_1"], prefit_func_2=c["prefit_func_2"])
+            f.train_framework(c["kanType"], c["env"], c["trainer"], c["modelType"], prefit_func_1=c["prefit_func_1"], prefit_func_2=c["prefit_func_2"], lr=c["lr"])
     elif mode.lower() == "test":
         for c in config.testConfigs:
             f = TestingFramework.test_dir(c["path"], c["env"])

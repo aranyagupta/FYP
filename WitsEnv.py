@@ -164,7 +164,7 @@ class WitsEnvConstrained(WitsEnvSuper):
 class WitsEnvCombined(WitsEnvSuper):
     def __init__(self, k, sigma, device, mode='TRAIN'):
         torch.set_default_dtype(torch.float32)
-        super().__init__()
+        super().__init__(k, sigma, device, mode=mode)
         
 
     def step_timesteps(self, actor_combined, actor_combined_second=None, timesteps=100000):
@@ -194,37 +194,35 @@ class WitsEnvLSA(WitsEnvSuper):
             self.x_0 = torch.normal(0, self.sigma, (TEST_TIMESTEPS,1), device=self.device)
             self.noise = torch.normal(0, 1, (TEST_TIMESTEPS, 1), device=self.device)
             
-    # generate u_1 tensor from randomly generated x0, given set of y1 values
-    def generate_u1_tensor_random(self, y1, x1):
+    # generate u_1 tensor from randomly generated x0, given set of y2 values
+    def generate_u1_tensor_random(self, y2, x1):
         # uses importance sampling 
         # the probability of finding y given a fixed x1 value is proportional to e^(-(y-x1)^2/2)
         # (as w is distributed normally with mean 0 variance 1)
         # we treat this probability as an importance weighting for that given value of y
         # we then find the expected value across all values of x1 ie 1/N * sum across all x1 of e^(-(y-x1)^2/2)*x1
         # to find the expected value of x1 | y = x1 + w
-        y1_exp = y1.unsqueeze(1)         # [N, 1]
-        x1_exp = x1.unsqueeze(0)         # [1, N]
+        y2_exp = y2.expand(y2.shape[0], y2.shape[0]).T
         
-        log_weights = -0.5 * (y1_exp - x1_exp) ** 2  # [N, N]
-        log_weights = log_weights - torch.max(log_weights, dim=1, keepdim=True).values  # stability
-        weights = torch.exp(log_weights)  # [N, N]
-        weights = weights / torch.sum(weights, dim=1, keepdim=True)  # normalize
+        log_weights = -0.5 * (y2_exp - x1) ** 2 
+        weights = 1/(torch.sqrt(torch.tensor(2*torch.pi, device=self.device)))*torch.exp(log_weights) 
 
-        out = torch.sum(weights * x1_exp, dim=1)  # [N]
+        out = torch.sum(weights * x1, dim=0)
+        out = out.reshape(out.shape[0], 1)
         return out
     
-    # generate u1 tensor from non-randomly generated x0, x1, for a given set of y1 values
-    # this explicity calculates the required integrals then uses them to generate y1
+    # generate u1 tensor from non-randomly generated x0, x1, for a given set of y2 values
+    # this explicity calculates the required integrals then uses them to generate y2
     # slower but less prone to noise than the random method
-    def generate_u1_tensor(self, y1, x1, x0):
+    def generate_u1_tensor(self, y2, x1, x0):
         f_X = lambda x : 1.0/(self.sigma* torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-x**2/(2*self.sigma**2))
         f_W = lambda w : 1.0/(torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-w**2/(2))
 
         x_0_integrating, indices = torch.sort(x0, dim=0)
         sorted_indices = indices.squeeze(1)
 
-        y1_exp = y1.expand(y1.shape[0], y1.shape[0]).T
-        bottomIntegrand = f_X(x0)*f_W(y1_exp-x1)
+        y2_exp = y2.expand(y2.shape[0], y2.shape[0]).T
+        bottomIntegrand = f_X(x0)*f_W(y2_exp-x1)
         bottomIntegrand_sorted = bottomIntegrand[sorted_indices, :]
         bottomIntegral = torch.trapz(y=bottomIntegrand_sorted, x=x_0_integrating.squeeze(1), dim=0)
 
@@ -241,33 +239,25 @@ class WitsEnvLSA(WitsEnvSuper):
         if self.mode == 'TEST':
             with torch.no_grad():
                 x_1 = actor_c1(self.x_0)
-                y_1 = x_1 + self.noise
-                u_1 = self.generate_u1_tensor_random(y_1, x_1)
+                y_2 = x_1 + self.noise
+                u_1 = self.generate_u1_tensor_random(y_2, x_1)
                 reward = self.k**2 * (self.x_0 - x_1)**2 + (u_1 - x_1)**2
                 return reward.mean()
             
         # x_0 = torch.normal(0, self.sigma, (timesteps,1), device=self.device)
         # x_1 = actor_c1(x_0)
         # w = torch.normal(0, 1, (timesteps,self.dims), device=self.device)
-        # y_1 = x_1 + w
-        # x_2 = self.generate_u1_tensor(y_1, x_1)
+        # y_2 = x_1 + w
+        # x_2 = self.generate_u1_tensor(y_2, x_1)
 
         x_0 = torch.linspace(-3*self.sigma, 3*self.sigma, timesteps)
         x_0 = x_0.reshape(x_0.shape[0], 1)
         x_1 = actor_c1(x_0)
-        y_1 = torch.linspace(-3*self.sigma, 3*self.sigma, timesteps)
-        y_1 = y_1.reshape(y_1.shape[0], 1)
-        x_2 = self.generate_u1_tensor(y_1, x_1, x_0)
-        if torch.any(torch.isnan(x_1)):
-            print("x_1 has nan:")
-        if torch.any(torch.isinf(x_1)):
-            print("x_1 has inf")
-        if torch.any(torch.isnan(x_2)):
-            print("x_2 has nan:")
-        if torch.any(torch.isinf(x_2)):
-            print("x_2 has inf")
-        # u1(y1) fixed, as it can be computed for arbitrary input using generate_u1_tensor
-        # now, calculate gradient for x1(x0) using u1(y1)
+        y_2 = torch.linspace(-3*self.sigma, 3*self.sigma, timesteps)
+        y_2 = y_2.reshape(y_2.shape[0], 1)
+        x_2 = self.generate_u1_tensor(y_2, x_1, x_0)
+        # u1(y_2) fixed, as it can be computed for arbitrary input using generate_u1_tensor
+        # now, calculate gradient for x1(x0) using u1(y_2)
         
         # x0 distribution pdf
         f_X = lambda x : 1.0/(self.sigma* torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-x**2/(2*self.sigma**2))
@@ -275,26 +265,22 @@ class WitsEnvLSA(WitsEnvSuper):
         f_W = lambda w : 1.0/(torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-w**2/(2))
 
         # dJ/dx_1[x_1, u_1](x_0) as in paper
-        # done by integrating D'_X(x_0, y_1)f_X(x_0)f_W(w) wrt y_1
-        # fix x_0, sort y_1 and permute integrand correspondingly, then integrate using trapz
+        # done by integrating D'_X(x_0, y_2)f_X(x_0)f_W(w) wrt y_2
+        # fix x_0, sort y_2 and permute integrand correspondingly, then integrate using trapz
         # store result in dJ/dx_1, then add remaining constant part at the end
 
-        y_1_integrating, indices = torch.sort(y_1, dim=0)
+        y_2_integrating, indices = torch.sort(y_2, dim=0)
         sorted_indices = indices.squeeze(1)
         dJ_dx1 = 2*self.k**2*(x_1-x_0)*f_X(x_0)     
 
         x_0_exp = x_0.expand(x_0.shape[0], x_0.shape[0]).T
         x_1_exp = x_1.expand(x_1.shape[0], x_1.shape[0]).T
 
-        integrand = (2*(x_1_exp-x_2) + (y_1-x_1_exp) * (x_1_exp-x_2)**2)*f_X(x_0_exp)*f_W(y_1-x_1_exp)
+        integrand = (2*(x_1_exp-x_2) + (y_2-x_1_exp) * (x_1_exp-x_2)**2)*f_X(x_0_exp)*f_W(y_2-x_1_exp)
         integrand_sorted = integrand[sorted_indices, :]
-        integral = torch.trapz(y=integrand_sorted, x=y_1_integrating.squeeze(1), dim=0)
+        integral = torch.trapz(y=integrand_sorted, x=y_2_integrating.squeeze(1), dim=0)
         integral = integral.reshape(integral.shape[0], 1)
         dJ_dx1 = dJ_dx1 + integral
-        if torch.any(torch.isnan(dJ_dx1)):
-            print("dJ_dx1 has nan:")
-        if torch.any(torch.isinf(dJ_dx1)):
-            print("dJ_dx1 has inf")
 
         ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
         # dJ_dx1_check = 2*self.k**2*(x_1-x_0)*f_X(x_0)
@@ -315,15 +301,11 @@ class WitsEnvLSA(WitsEnvSuper):
 
         # Partial derivative of dJ_dx1 wrt x_1, taken from paper
         dx1_dJ_dx1 = 2*(self.k**2-1)*f_X(x_0)
-        integrand = ((y_1-x_1_exp)*(x_1_exp-x_2+2)**2 - (x_1_exp-x_2))**2 * f_X(x_0_exp)*f_W(y_1-x_1_exp)
+        integrand = ((y_2-x_1_exp)*(x_1_exp-x_2+2)**2 - (x_1_exp-x_2))**2 * f_X(x_0_exp)*f_W(y_2-x_1_exp)
         integrand_sorted = integrand[sorted_indices, :]
-        integral = torch.trapz(y=integrand_sorted, x=y_1_integrating.squeeze(1), dim=0)
+        integral = torch.trapz(y=integrand_sorted, x=y_2_integrating.squeeze(1), dim=0)
         integral = integral.reshape(integral.shape[0], 1)
         dx1_dJ_dx1 = dx1_dJ_dx1 + integral
-        if torch.any(torch.isnan(dx1_dJ_dx1)):
-            print("dx1_dJ_dx1 has nan")
-        if torch.any(torch.isinf(dx1_dJ_dx1)):
-            print("dx1_dJ_dx1 has inf")
 
          ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
         # dx1_dJ_dx1_check = 2*(self.k**2-1)*f_X(x_0)

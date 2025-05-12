@@ -64,7 +64,7 @@ class TrainingFramework:
         model.fit(dataset, opt="Adam", steps=400, lamb=0., lr=0.01)
 
 
-    def train_framework(self, kanType, env, trainer, modelType, prefit_func_1=None, prefit_func_2=None):
+    def train_framework(self, kanType, env, trainer, modelType, prefit_func_1=None, prefit_func_2=None, lr=0.01):
         for kan_hyp in self.KAN_hyps:
             for sigma in self.sigma_range:
                 grid_range = [-3*sigma, 3*sigma]
@@ -90,7 +90,7 @@ class TrainingFramework:
                     if prefit_func_2 is not None:
                         actor_c2 = prefit_model_2.copy()
                     trainEnv = env(k, sigma, device=self.device, mode='TRAIN')
-                    alg = trainer(trainEnv, actor_c1, actor_c2)
+                    alg = trainer(trainEnv, actor_c1, actor_c2, lr)
                     
                     best_loss = 1e7
                     if type(alg) == WitsPPO.WitsLSA:
