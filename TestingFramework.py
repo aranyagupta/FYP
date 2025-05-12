@@ -37,6 +37,8 @@ def test_dir(path, env):
         core_names.append(c)
         kvals.append(k)
         sigmavals.append(s)
+        # kvals.append(0.2)
+        # sigmavals.append(5.0)
 
     seen_before = {}    
     count = 0
