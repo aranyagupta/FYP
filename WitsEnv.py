@@ -293,8 +293,8 @@ class WitsEnvLSA(WitsEnvSuper):
         dJ_dx1 = dJ_dx1 + integral
         if torch.any(torch.isnan(dJ_dx1)):
             print("dJ_dx1 has nan:")
-        if torch.any(torch.isinf(dx1_dJ_dx1)):
-            print("dx1_dJ_dx1 has inf")
+        if torch.any(torch.isinf(dJ_dx1)):
+            print("dJ_dx1 has inf")
 
         ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
         # dJ_dx1_check = 2*self.k**2*(x_1-x_0)*f_X(x_0)
