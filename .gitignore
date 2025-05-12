@@ -182,3 +182,5 @@ witsenhausen_preinit_loss/
 witsenhausen_preinit_models/
 LSA_loss/
 LSA_models/
+FGD_loss/
+FGD_models/

@@ -1,11 +1,11 @@
 import torch
 import TrainingFramework
+import TestingFramework
 from DataVis import *
 from SplineComposer import *
 import kan
-import CombinedKan
-import WitsEnv
-import WitsPPO
+import sys
+import config
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -13,72 +13,59 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 torch.set_default_device(device=device)
 
-TRAIN_DGD = False
-TRAIN_DGDCOMB = False
-TRAIN_ALTERNATING = False
-TRAIN_LAG = False
-TRAIN_LSA = True
-TRAIN_FGD = False
-
 DISPLAY_HEATMAP = False
 DISPLAY_SYMBOLIC = False
 
 PLOT_GRAPHS = False
 
 if __name__ == "__main__":
-    min_hidden_layers = 1
-    max_hidden_layers = 1
-    min_layer_width = 10
-    max_layer_width = 12
-
-    # kvals = torch.sqrt(torch.arange(0.05, 0.35, 0.05)).tolist()
-    # sigvals = torch.sqrt(torch.arange(5.0, 45.0, 5.0)).tolist()
-    kvals = torch.arange(0.1, 0.6, 0.1)
-    sigvals = [5.0]
-    kan_hyps = []
-    for num_layers in range(min_hidden_layers, max_hidden_layers+1):
-        for layer_width in range(min_layer_width, max_layer_width+1):
-            hidden = [layer_width] * num_layers
-            hyps = [1] + hidden + [1]
-            kan_hyps.append(hyps)
-
-    f = TrainingFramework.TrainingFramework(k_range=kvals, sigma_range=sigvals, KAN_hyps=kan_hyps)
-    if TRAIN_DGD:
-        kanType = kan.KAN
-        env = WitsEnv.WitsEnv
-        gradDesc = WitsPPO.WitsGradDesc
-        modelType = 'DGD'
-        f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda sigma, x : sigma * torch.sign(x), prefit_func_2=lambda sigma, x: sigma*torch.tanh(sigma*x))
-    if TRAIN_DGDCOMB:
-        kanType = CombinedKan.CombinedKan
-        env = WitsEnv.WitsEnvCombined
-        gradDesc = WitsPPO.WitsGradDescCombined
-        modelType = 'DGDCOMB'
-        f.train_framework(kanType, env, gradDesc, modelType)
-    if TRAIN_ALTERNATING:
-        kanType = kan.KAN
-        env = WitsEnv.WitsEnv
-        gradDesc = WitsPPO.WitsAlternatingDescent
-        modelType = "ALTERNATING"
-        f.train_framework(kanType, env, gradDesc, modelType)
-    if TRAIN_LAG:
-        kanType = kan.KAN
-        env = WitsEnv.WitsEnvConstrained
-        gradDesc = WitsPPO.WitsGradDescConstrained
-        modelType = "LAG"
-        f.train_framework(kanType, env, gradDesc, modelType)
-    if TRAIN_LSA:
-        kanType = kan.KAN
-        env = WitsEnv.WitsEnvLSA
-        gradDesc = WitsPPO.WitsLSA
-        modelType="LSA"
-        f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda sigma, x : sigma * torch.sign(x))
-    if TRAIN_FGD:
-        kanType = kan.KAN
-        env = WitsEnv.WitsEnvFGD
-        gradDesc = WitsPPO.WitsFGD
-        modelType = "FGD"
-        f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda sigma, x : sigma * torch.sign(x), prefit_func_2=lambda sigma, x: sigma*torch.tanh(sigma*x))
+    if len(sys.argv) == 1:
+        raise Exception("Require command line input: test for testing, train for training \n ie python main.py test \n Configure training or testing in config.py")
+    if len(sys.argv) > 1:
+        mode = sys.argv[1]
+    if mode.lower() == "train":
+        for c in config.configs:
+            f = TrainingFramework.TrainingFramework(k_range=c["kvals"], sigma_range=c["sigvals"], KAN_hyps=c["kanHyps"])
+            f.train_framework(c["kanType"], c["env"], c["trainer"], c["modelType"], prefit_func_1=c["prefit_func_1"], prefit_func_2=c["prefit_func_2"])
+    elif mode.lower() == "test":
+        for c in config.testConfigs:
+            f = TestingFramework.test_dir(c["path"], c["env"])
+    # if TRAIN_DGD:
+    #     kanType = kan.KAN
+    #     env = WitsEnv.WitsEnv
+    #     gradDesc = WitsPPO.WitsGradDesc
+    #     modelType = 'DGD'
+    #     f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda sigma, x : sigma * torch.sign(x), prefit_func_2=lambda sigma, x: sigma*torch.tanh(sigma*x))
+    # if TRAIN_DGDCOMB:
+    #     kanType = CombinedKan.CombinedKan
+    #     env = WitsEnv.WitsEnvCombined
+    #     gradDesc = WitsPPO.WitsGradDescCombined
+    #     modelType = 'DGDCOMB'
+    #     f.train_framework(kanType, env, gradDesc, modelType)
+    # if TRAIN_ALTERNATING:
+    #     kanType = kan.KAN
+    #     env = WitsEnv.WitsEnv
+    #     gradDesc = WitsPPO.WitsAlternatingDescent
+    #     modelType = "ALTERNATING"
+    #     f.train_framework(kanType, env, gradDesc, modelType)
+    # if TRAIN_LAG:
+    #     kanType = kan.KAN
+    #     env = WitsEnv.WitsEnvConstrained
+    #     gradDesc = WitsPPO.WitsGradDescConstrained
+    #     modelType = "LAG"
+    #     f.train_framework(kanType, env, gradDesc, modelType)
+    # if TRAIN_LSA:
+    #     kanType = kan.KAN
+    #     env = WitsEnv.WitsEnvLSA
+    #     gradDesc = WitsPPO.WitsLSA
+    #     modelType="LSA"
+    #     f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda sigma, x : sigma * torch.sign(x))
+    # if TRAIN_FGD:
+    #     kanType = kan.KAN
+    #     env = WitsEnv.WitsEnvFGD
+    #     gradDesc = WitsPPO.WitsFGD
+    #     modelType = "FGD"
+    #     f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda sigma, x : sigma * torch.sign(x), prefit_func_2=lambda sigma, x: sigma*torch.tanh(sigma*x))
 
     if DISPLAY_HEATMAP:
         hyps =  [[1,0],[2,0],[2,0],[2,0],[1,0]]
@@ -96,10 +83,10 @@ if __name__ == "__main__":
         create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title=f"{modelType} {[x[0] for x in hyps]} Model Costs (Area constraint)")
     
     if DISPLAY_SYMBOLIC:
-        hyps = [[1,0],[6,0],[1,0]]
+        hyps = [[1,0],[11,0],[1,0]]
 
         # LINEAR (UNINTENTIONAL - SHOULD BE 3-STEP)
-        k = "0.20"
+        k = "0.40"
         sigma = "5.00"  
 
         # 3 STEP: TBF
@@ -110,22 +97,22 @@ if __name__ == "__main__":
         # k = 0.39
         # sigma = 3.87
 
-        modelType = 'LSA'
+        modelType = 'FGD'
         
-        name = f"LSA_models/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
+        name = f"FGD_models/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
         actor_c1 = kan.KAN.loadckpt(name+"c1")
         actor_c2 = kan.KAN.loadckpt(name+"c2")
         act_fun_c1 = actor_c1.act_fun
         act_fun_c2 = actor_c2.act_fun
         
         if PLOT_GRAPHS:
-            # actor_c1.plot()
-            # plt.show()
-            # actor_c2.plot()
-            # plt.show()
+            actor_c1.plot()
+            plt.show()
+            actor_c2.plot()
+            plt.show()
         
-            plot_model_bruteforce(actor_c1, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C1, k={k}, sig={sigma}, {modelType}")
-            plot_model_bruteforce(actor_c2, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C2, k={k}, sig={sigma}, {modelType}")
+            plot_model_bruteforce(actor_c1, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C1, hyps={[x[0] for x in hyps]}, k={k}, sig={sigma}, {modelType}")
+            plot_model_bruteforce(actor_c2, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C2, hyps={[x[0] for x in hyps]}, k={k}, sig={sigma}, {modelType}")
 
 
         # individual_functions_c1 = individual_kanlayers(act_fun_c1)

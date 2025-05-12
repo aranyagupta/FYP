@@ -1,6 +1,4 @@
-import kan
 import torch
-from kan.utils import ex_round
 import matplotlib.pyplot as plt
 import sympy as sp
 import numpy as np

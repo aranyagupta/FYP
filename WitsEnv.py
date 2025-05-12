@@ -1,87 +1,76 @@
 import torch
-from torch.distributions import MultivariateNormal
 
+'''
+Superclass for all Witsenhausen Environments
+Every environment should implement this class
+'''
+class WitsEnvSuper:
+    def __init__(self, k, sigma, device, mode='TRAIN'):
+        self.k = k
+        self.sigma = sigma
+        self.device = device
+        self.mode = mode
 
+        if mode == 'TEST':
+            self.x_0 = torch.normal(0, self.sigma, (1000000, 1), device=self.device)
+            self.noise = torch.normal(0, 1, (1000000, 1), device=self.device)
+
+    def step_timesteps(self, actor_c1, actor_c2, timesteps=100000):
+        raise Exception("Not Implemented!")
 
 # ----------------- Regular Environments ----------------- #
 ''' 
     Generates a Witsenhausen environment 
     Environment and system are used interchangeably here
 '''
-class WitsEnv():
+class WitsEnv(WitsEnvSuper):
     '''
         Initialises a Witsenhausen Counterexample environment
         k: Witsenhausen cost parameter
         sigma: standard dev of x_0
         dims: dimension of environment (system state variables)
     '''
-    def __init__(self, k, sigma, dims, device, mode='TRAIN'):
+    def __init__(self, k, sigma, device, mode='TRAIN'):
         torch.set_default_dtype(torch.float32)
-        
-        self.k = k
-        self.sigma = sigma
-        self.dims = dims
-        self.device = device
-        self.mode = mode
 
-        if mode == 'TEST':
-            self.x_0 = torch.normal(0, self.sigma, (1000000, self.dims), device=self.device)
-            self.noise = torch.normal(0, 1, (1000000, self.dims), device=self.device)
+        super().__init__(k, sigma, device, mode=mode)
     
-    def step_timesteps(self, actor_c1, actor_c2, timesteps, noise=True):
+    def step_timesteps(self, actor_c1, actor_c2, timesteps):
         if self.mode == 'TEST':
             with torch.no_grad():
                 u_1 = actor_c1(self.x_0)
-                y_1 = u_1 + noise*self.noise
+                y_1 = u_1 + self.noise
                 u_2 = actor_c2(y_1)
                 reward = (self.k**2 * (self.x_0 - u_1)**2 + (u_2-u_1)**2)
                 return reward.mean()
         
-        self.x_0 = torch.normal(0, self.sigma, (timesteps,self.dims), device=self.device)
-        u_1 = actor_c1(self.x_0)
-        self.x_1 = u_1
+        x_0 = torch.normal(0, self.sigma, (timesteps,1), device=self.device)
+        u_1 = actor_c1(x_0)
+        x_1 = u_1
         
-        y_1 = self.x_1 + noise*torch.normal(0, 1, (timesteps,self.dims), device=self.device)
+        y_1 = x_1 + torch.normal(0, 1, (timesteps,1), device=self.device)
         u_2 = actor_c2(y_1)
-        self.x_2 = u_2
+        x_2 = u_2
         
+        reward = (self.k**2 * (x_0 - x_1)**2 + (x_2-x_1)**2)
 
-        terminated = False
-        truncated = False
+        return reward
 
-        reward = - (self.k**2 * (self.x_0 - self.x_1)**2 + (self.x_2-self.x_1)**2)
-
-        act_c1 = self.x_1
-        act_c2 = self.x_2 
-        obs_c1 = self.x_0
-        obs_c2 = y_1 
-        # obs for c1, obs for c2, act for c1, act for c2, reward, termination or truncation
-        return obs_c1, obs_c2, reward, terminated, truncated
-
-class WitsEnvConstrained:
+class WitsEnvConstrained(WitsEnvSuper):
     '''
         Initialises a Witsenhausen Counterexample environment with constrained loss
         k: Witsenhausen cost parameter
         sigma: standard dev of x_0
-        dims: dimension of environment (system state variables)
     '''
-    def __init__(self, k, sigma, dims, device, mode='TRAIN', constrain_odd = False, constrain_nonlinear=False, constrain_nonaffine = False, constrain_new = True):
+    def __init__(self, k, sigma, device, mode='TRAIN', constrain_odd = False, constrain_nonlinear=False, constrain_nonaffine = False, constrain_new = True):
         torch.set_default_dtype(torch.float32)
+        super().__init__(k, sigma, device, mode=mode)
         
-        self.k = k
-        self.sigma = sigma
-        self.dims = dims
-        self.device = device
-        self.mode = mode
         self.epsilon = 10
         self.constrain_odd = constrain_odd
         self.constrain_nonaffine = constrain_nonaffine
         self.constrain_nonlinear = constrain_nonlinear
         self.constrain_new = constrain_new
-
-        if mode == 'TEST':
-            self.x_0 = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
-            self.noise = torch.normal(0, 1, (100000, self.dims), device=self.device)
     
     def step_timesteps(self, actor_c1, actor_c2, lamb_0=0, lamb_1=0, mu_0=0, mu_1=0, timesteps=1000000, noise=True):
         if self.mode == 'TEST':
@@ -92,17 +81,13 @@ class WitsEnvConstrained:
                 reward = (self.k**2 * (self.x_0 - u_1)**2 + (u_2-u_1)**2)
                 return reward.mean()
         
-        self.x_0 = torch.normal(0, self.sigma, (timesteps,self.dims), device=self.device)
+        self.x_0 = torch.normal(0, self.sigma, (timesteps,1), device=self.device)
         u_1 = actor_c1(self.x_0)
         self.x_1 = u_1
         
-        y_1 = self.x_1 + noise*torch.normal(0, 1, (timesteps,self.dims), device=self.device)
+        y_1 = self.x_1 + noise*torch.normal(0, 1, (timesteps,1), device=self.device)
         u_2 = actor_c2(y_1)
         self.x_2 = u_2
-        
-
-        terminated = False
-        truncated = False
 
         if self.constrain_nonlinear:
             first_linear_gradient = (torch.transpose(self.x_0, 0, 1) @ self.x_1)/(torch.transpose(self.x_0, 0, 1) @ self.x_0 + 1e-8) 
@@ -174,29 +159,18 @@ class WitsEnvConstrained:
         print("f_x:", f_x.mean())
         reward = f_x + lamb_0 * h_0_x + lamb_1 * h_1_x + mu_0 * g_0_x + mu_1 * g_1_x
 
-        obs_c1 = self.x_0
-        obs_c2 = y_1 
-        # obs for c1, obs for c2, act for c1, act for c2, reward, termination or truncation
-        return obs_c1, obs_c2, reward, terminated, truncated
+        return reward
 
-class WitsEnvCombined:
-    def __init__(self, k, sigma, dims, device, mode='TRAIN'):
+class WitsEnvCombined(WitsEnvSuper):
+    def __init__(self, k, sigma, device, mode='TRAIN'):
         torch.set_default_dtype(torch.float32)
+        super().__init__()
         
-        self.k = k
-        self.sigma = sigma
-        self.device = device
-        self.mode = mode
-        self.dims = dims
 
-        if self.mode == 'TEST':
-            self.x = torch.normal(0, self.sigma, (100000, self.dims), device=self.device)
-            self.noise = torch.normal(0, 1, (100000, self.dims), device=self.device)
-
-    def step_timesteps(self, actor_combined, actor_combined_second, timesteps, noise=True):
+    def step_timesteps(self, actor_combined, actor_combined_second=None, timesteps=100000):
         if self.mode=='TEST':
             with torch.no_grad():
-                u_1, y_2, u_2 = actor_combined(self.x, noise_data=self.noise)
+                u_1, y_2, u_2 = actor_combined(self.x_0, noise_data=self.noise)
                 reward = (self.k**2 * (x - u_1)**2 + (u_2-u_1)**2)
                 return reward.mean()
         
@@ -206,22 +180,15 @@ class WitsEnvCombined:
         # u_1 = u_1.clone().detach()
         # y_2 = y_2.clone().detach()
         
-        obs_c1 = x
-        obs_c2 = y_2
-        reward = - (self.k**2 * (x - u_1)**2 + (u_2-u_1)**2)
-        return obs_c1, obs_c2, reward, False, False
+        reward = (self.k**2 * (x - u_1)**2 + (u_2-u_1)**2)
+        return reward
     
 # Environment for local search algorithm
-class WitsEnvLSA:
-    def __init__(self, k, sigma, dims, device, mode='TRAIN'):
+class WitsEnvLSA(WitsEnvSuper):
+    def __init__(self, k, sigma, device, mode='TRAIN'):
         torch.set_default_dtype(torch.float32)
+        super().__init__(k, sigma, device, mode=mode)
         
-        self.k = k
-        self.sigma = sigma
-        self.device = device
-        self.mode = mode
-        self.dims = dims
-
         if self.mode == 'TEST':
             TEST_TIMESTEPS = 20000
             self.x_0 = torch.normal(0, self.sigma, (TEST_TIMESTEPS,1), device=self.device)
@@ -268,8 +235,6 @@ class WitsEnvLSA:
         u1 = topIntegral/bottomIntegral
         return u1
 
-
-
     def step_timesteps(self, actor_c1, actor_c2=None, timesteps=100000):
         # actor_c1 = x1(x0) in paper
         # No need for actor c2 as it can be directly calculated
@@ -287,10 +252,10 @@ class WitsEnvLSA:
         # y_1 = x_1 + w
         # x_2 = self.generate_u1_tensor(y_1, x_1)
 
-        x_0 = torch.arange(-3*self.sigma, 3*self.sigma, (6*self.sigma)/timesteps)
+        x_0 = torch.linspace(-3*self.sigma, 3*self.sigma, timesteps)
         x_0 = x_0.reshape(x_0.shape[0], 1)
         x_1 = actor_c1(x_0)
-        y_1 = torch.arange(-3*self.sigma, 3*self.sigma, (6*self.sigma)/timesteps)
+        y_1 = torch.linspace(-3*self.sigma-3, 3*self.sigma+3, timesteps)
         y_1 = y_1.reshape(y_1.shape[0], 1)
         x_2 = self.generate_u1_tensor(y_1, x_1, x_0)
 
@@ -361,12 +326,9 @@ class WitsEnvLSA:
    
 
 # implements an environment for the Frechet Gradient Method (NOT Frechet Discrete Gradient)
-class WitsEnvFGD:
-    def __init__(self, k, sigma, dims, device, mode='TRAIN'):
-        self.k = k
-        self.sigma = sigma
-        self.device =  device
-        self.mode = mode
+class WitsEnvFGD(WitsEnvSuper):
+    def __init__(self, k, sigma, device, mode='TRAIN'):
+        super().__init__(k, sigma, device, mode=mode)
         if mode == 'TEST':
             TEST_TIMESTEPS = 20000
             self.x_0 = torch.normal(0, self.sigma, (TEST_TIMESTEPS,1), device=self.device)

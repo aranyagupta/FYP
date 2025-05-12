@@ -1,12 +1,10 @@
-import WitsEnv
 import WitsPPO
-import CombinedKan
 import kan
 import torch
 import os
 
 class TrainingFramework:
-    def __init__(self, KAN_hyps=[[1,2,2,1]], k_range=[0.05, 1.0, 0.05], sigma_range=[0.1, 7.1, 0.25], noiseless = False, store_models=True, store_loss=True):
+    def __init__(self, KAN_hyps=[[1,2,2,1]], k_range=[0.05, 1.0, 0.05], sigma_range=[0.1, 7.1, 0.25], store_models=True, store_loss=True):
         if len(k_range)==3:
             self.k_range = [k_range[0]+i*k_range[2] for i in range(int( (k_range[1]-k_range[0]) / k_range[2])+1)]
         else:
@@ -66,7 +64,7 @@ class TrainingFramework:
         model.fit(dataset, opt="Adam", steps=400, lamb=0., lr=0.01)
 
 
-    def train_framework(self, kanType, env, gradDesc, modelType, prefit_func_1=None, prefit_func_2=None):
+    def train_framework(self, kanType, env, trainer, modelType, prefit_func_1=None, prefit_func_2=None):
         for kan_hyp in self.KAN_hyps:
             for sigma in self.sigma_range:
                 grid_range = [-3*sigma, 3*sigma]
@@ -80,7 +78,7 @@ class TrainingFramework:
                 if prefit_func_2 is not None and not finished_sigma:
                     self._prefit_to(prefit_model_2, prefit_func_2, grid_range=grid_range)
                 for k in self.k_range:
-                    testEnv = env(k, sigma, dims=1, device=self.device, mode='TEST')
+                    testEnv = env(k, sigma, device=self.device, mode='TEST')
                     print(f"TRAINING: {modelType}-k-{k:.2f}-sigma-{sigma:.2f}-hyps-{kan_hyp}")
                     actor_c1 = kanType(width=kan_hyp, grid=grid, k=3, seed=42, grid_range=grid_range, device=self.device)
                     actor_c2 = kanType(width=kan_hyp, grid=grid, k=3, seed=42, grid_range=grid_range, device=self.device)
@@ -91,8 +89,8 @@ class TrainingFramework:
                         actor_c1 = prefit_model_1.copy()
                     if prefit_func_2 is not None:
                         actor_c2 = prefit_model_2.copy()
-                    trainEnv = env(k, sigma, dims=1, mode='TRAIN', device=self.device)
-                    alg = gradDesc(trainEnv, actor_c1, actor_c2)
+                    trainEnv = env(k, sigma, device=self.device, mode='TRAIN')
+                    alg = trainer(trainEnv, actor_c1, actor_c2)
                     
                     best_loss = 1e7
                     if type(alg) == WitsPPO.WitsLSA:
