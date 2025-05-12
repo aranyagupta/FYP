@@ -255,7 +255,7 @@ class WitsEnvLSA(WitsEnvSuper):
         x_0 = torch.linspace(-3*self.sigma, 3*self.sigma, timesteps)
         x_0 = x_0.reshape(x_0.shape[0], 1)
         x_1 = actor_c1(x_0)
-        y_1 = torch.linspace(-3*self.sigma-3, 3*self.sigma+3, timesteps)
+        y_1 = torch.linspace(-3*self.sigma, 3*self.sigma, timesteps)
         y_1 = y_1.reshape(y_1.shape[0], 1)
         x_2 = self.generate_u1_tensor(y_1, x_1, x_0)
         if torch.any(torch.isnan(x_1)):
