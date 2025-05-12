@@ -260,12 +260,12 @@ class WitsEnvLSA(WitsEnvSuper):
         x_2 = self.generate_u1_tensor(y_1, x_1, x_0)
         if torch.any(torch.isnan(x_1)):
             print("x_1 has nan:")
-        if torch.any(torch.isinf(dx1_dJ_dx1)):
-            print("dx1_dJ_dx1 has inf")
+        if torch.any(torch.isinf(x_1)):
+            print("x_1 has inf")
         if torch.any(torch.isnan(x_2)):
             print("x_2 has nan:")
-        if torch.any(torch.isinf(dx1_dJ_dx1)):
-            print("dx1_dJ_dx1 has inf")
+        if torch.any(torch.isinf(x_2)):
+            print("x_2 has inf")
         # u1(y1) fixed, as it can be computed for arbitrary input using generate_u1_tensor
         # now, calculate gradient for x1(x0) using u1(y1)
         
