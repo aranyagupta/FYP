@@ -202,15 +202,15 @@ class WitsEnvLSA(WitsEnvSuper):
         # we treat this probability as an importance weighting for that given value of y
         # we then find the expected value across all values of x1 ie 1/N * sum across all x1 of e^(-(y-x1)^2/2)*x1
         # to find the expected value of x1 | y = x1 + w
-        y2_exp = y2.expand(y2.shape[0], y2.shape[0]).T
-        
-        log_weights = -0.5 * (y2_exp - x1) ** 2 
-        # log_weights = log_weights - torch.max(log_weights, dim=1, keepdim=True).values # stability
-        weights = 1/(torch.sqrt(torch.tensor(2*torch.pi, device=self.device)))*torch.exp(log_weights) 
-        weights = weights / torch.sum(weights, dim=1, keepdim=True) # normalisation
+        y2_exp = y2.unsqueeze(1)
+        x1_exp = x1.unsqueeze(0)
+        log_weights = -0.5 * (y2_exp - x1_exp) ** 2  
+        log_weights = log_weights - torch.max(log_weights, dim=1, keepdim=True).values  #stability
+        weights = torch.exp(log_weights)
+        weights = weights / torch.sum(weights, dim=1, keepdim=True)  # normalize
 
-        out = torch.sum(weights * x1, dim=1)
-        out = out.reshape(out.shape[0], 1)
+        out = torch.sum(weights * x1_exp, dim=1)  # [N]
+        
         return out
     
     # generate u1 tensor from non-randomly generated x0, x1, for a given set of y2 values

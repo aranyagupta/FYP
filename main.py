@@ -30,6 +30,8 @@ if __name__ == "__main__":
     elif mode.lower() == "test":
         for c in config.testConfigs:
             f = TestingFramework.test_dir(c["path"], c["env"])
+    else:
+        pass
     # if TRAIN_DGD:
     #     kanType = kan.KAN
     #     env = WitsEnv.WitsEnv
@@ -86,7 +88,7 @@ if __name__ == "__main__":
         hyps = [[1,0],[11,0],[1,0]]
 
         # LINEAR (UNINTENTIONAL - SHOULD BE 3-STEP)
-        k = "0.40"
+        k = "0.20"
         sigma = "5.00"  
 
         # 3 STEP: TBF
@@ -97,9 +99,9 @@ if __name__ == "__main__":
         # k = 0.39
         # sigma = 3.87
 
-        modelType = 'FGD'
+        modelType = 'LSA'
         
-        name = f"FGD_models/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
+        name = f"wits_models/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
         actor_c1 = kan.KAN.loadckpt(name+"c1")
         actor_c2 = kan.KAN.loadckpt(name+"c2")
         act_fun_c1 = actor_c1.act_fun

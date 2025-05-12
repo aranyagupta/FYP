@@ -25,7 +25,7 @@ Testing configurations
 """
 testConfigs = [
     {
-        "path":"FGD_models/",
-        "env":WitsEnv.WitsEnvFGD
+        "path":"wits_models/",
+        "env":WitsEnv.WitsEnvLSA
     }
 ]

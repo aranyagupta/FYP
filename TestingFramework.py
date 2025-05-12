@@ -32,15 +32,20 @@ def test_dir(path, env):
     core_names = []
     kvals = []
     sigmavals = []
-
     for file in files:
         c, k, s = extract_info(file)
         core_names.append(c)
         kvals.append(k)
         sigmavals.append(s)
 
+    seen_before = {}    
+    count = 0
     for i in range(len(core_names)):
-        if core_names[i] != "":
+        try:
+            seen = seen_before[core_names[i]]
+        except:
+            seen = False
+        if core_names[i] != "" and not seen:
             c1 = kan.KAN.loadckpt(path+core_names[i]+"-c1")
             c2 = kan.KAN.loadckpt(path+core_names[i]+"-c2")
             k = kvals[i]
@@ -48,4 +53,7 @@ def test_dir(path, env):
             testEnv = env(k, s, device, mode="TEST")
             rew = testEnv.step_timesteps(c1, c2, timesteps=100000)
             print("Tested:", core_names[i], "value:", rew)
+            seen_before[core_names[i]] = 1
+            count +=1
+    print("TESTED", count, "MODELS")
 
