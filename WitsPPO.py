@@ -137,7 +137,7 @@ class WitsAlternatingDescent(WitsTrainer):
 # Local Search Algorithm as described in this paper:
 # https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8264401	
 class WitsLSA(WitsTrainer):
-	def __init__(self, env, actor_c1, actor_c2=None, lr=0.01, N=15, p=1e-2):
+	def __init__(self, env, actor_c1, actor_c2=None, lr=0.01, N=15, p=1e-1):
 		super().__init__(env, actor_c1, actor_c2, lr)
 
 		self.N = N # num repetitions
