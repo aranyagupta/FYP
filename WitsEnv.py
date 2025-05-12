@@ -260,8 +260,12 @@ class WitsEnvLSA(WitsEnvSuper):
         x_2 = self.generate_u1_tensor(y_1, x_1, x_0)
         if torch.any(torch.isnan(x_1)):
             print("x_1 has nan:")
+        if torch.any(torch.isinf(dx1_dJ_dx1)):
+            print("dx1_dJ_dx1 has inf")
         if torch.any(torch.isnan(x_2)):
             print("x_2 has nan:")
+        if torch.any(torch.isinf(dx1_dJ_dx1)):
+            print("dx1_dJ_dx1 has inf")
         # u1(y1) fixed, as it can be computed for arbitrary input using generate_u1_tensor
         # now, calculate gradient for x1(x0) using u1(y1)
         
@@ -289,6 +293,8 @@ class WitsEnvLSA(WitsEnvSuper):
         dJ_dx1 = dJ_dx1 + integral
         if torch.any(torch.isnan(dJ_dx1)):
             print("dJ_dx1 has nan:")
+        if torch.any(torch.isinf(dx1_dJ_dx1)):
+            print("dx1_dJ_dx1 has inf")
 
         ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
         # dJ_dx1_check = 2*self.k**2*(x_1-x_0)*f_X(x_0)
@@ -316,6 +322,8 @@ class WitsEnvLSA(WitsEnvSuper):
         dx1_dJ_dx1 = dx1_dJ_dx1 + integral
         if torch.any(torch.isnan(dx1_dJ_dx1)):
             print("dx1_dJ_dx1 has nan")
+        if torch.any(torch.isinf(dx1_dJ_dx1)):
+            print("dx1_dJ_dx1 has inf")
 
          ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
         # dx1_dJ_dx1_check = 2*(self.k**2-1)*f_X(x_0)
