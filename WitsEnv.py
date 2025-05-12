@@ -258,7 +258,10 @@ class WitsEnvLSA(WitsEnvSuper):
         y_1 = torch.linspace(-3*self.sigma-3, 3*self.sigma+3, timesteps)
         y_1 = y_1.reshape(y_1.shape[0], 1)
         x_2 = self.generate_u1_tensor(y_1, x_1, x_0)
-
+        if torch.any(torch.isnan(x_1)):
+            print("x_1 has nan:")
+        if torch.any(torch.isnan(x_2)):
+            print("x_2 has nan:")
         # u1(y1) fixed, as it can be computed for arbitrary input using generate_u1_tensor
         # now, calculate gradient for x1(x0) using u1(y1)
         
@@ -284,7 +287,8 @@ class WitsEnvLSA(WitsEnvSuper):
         integral = torch.trapz(y=integrand_sorted, x=y_1_integrating.squeeze(1), dim=0)
         integral = integral.reshape(integral.shape[0], 1)
         dJ_dx1 = dJ_dx1 + integral
-        print("dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
+        if torch.any(torch.isnan(dJ_dx1)):
+            print("dJ_dx1 has nan:")
 
         ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
         # dJ_dx1_check = 2*self.k**2*(x_1-x_0)*f_X(x_0)
@@ -310,7 +314,8 @@ class WitsEnvLSA(WitsEnvSuper):
         integral = torch.trapz(y=integrand_sorted, x=y_1_integrating.squeeze(1), dim=0)
         integral = integral.reshape(integral.shape[0], 1)
         dx1_dJ_dx1 = dx1_dJ_dx1 + integral
-        print("dx1_dJ_dx1 has nan:", torch.any(torch.isnan(dx1_dJ_dx1)))
+        if torch.any(torch.isnan(dx1_dJ_dx1)):
+            print("dx1_dJ_dx1 has nan")
 
          ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
         # dx1_dJ_dx1_check = 2*(self.k**2-1)*f_X(x_0)
