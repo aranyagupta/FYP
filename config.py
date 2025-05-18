@@ -23,18 +23,6 @@ configs = [
         "sigvals":[2.2361, 3.1623, 3.8730, 4.4721, 5.0000, 5.4772, 5.9161, 6.3246, 6.7082],
         "kanHyps":[[1,12,1]],
         "kanType":kan.KAN,
-        "env":WitsEnv.WitsEnvLSA,
-        "trainer":WitsPPO.WitsLSA,
-        "modelType":"LSA",
-        "prefit_func_1": lambda sigma, x : sigma*torch.sign(x),
-        "prefit_func_2": None,
-        "lr":0.01,
-    },
-    {
-        "kvals":[0.77],
-        "sigvals":[2.2361, 3.1623, 3.8730, 4.4721, 5.0000, 5.4772, 5.9161, 6.3246, 6.7082],
-        "kanHyps":[[1,12,1]],
-        "kanType":kan.KAN,
         "env":WitsEnv.WitsEnvFGD,
         "trainer":WitsPPO.WitsFGD,
         "modelType":"FGD",
@@ -53,8 +41,19 @@ configs = [
         "prefit_func_1": lambda sigma, x : sigma*torch.sign(x),
         "prefit_func_2": lambda sigma, x : sigma*torch.tanh(sigma*x),
         "lr":0.01,
-    }
-
+    },
+    {
+        "kvals":[0.77],
+        "sigvals":[2.2361, 3.1623, 3.8730, 4.4721, 5.0000, 5.4772, 5.9161, 6.3246, 6.7082],
+        "kanHyps":[[1,12,1]],
+        "kanType":kan.KAN,
+        "env":WitsEnv.WitsEnvLSA,
+        "trainer":WitsPPO.WitsLSA,
+        "modelType":"LSA",
+        "prefit_func_1": lambda sigma, x : sigma*torch.sign(x),
+        "prefit_func_2": None,
+        "lr":0.01,
+    },
 
 ]
 
