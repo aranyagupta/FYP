@@ -66,7 +66,7 @@ class WitsEnvConstrained(WitsEnvSuper):
         torch.set_default_dtype(torch.float32)
         super().__init__(k, sigma, device, mode=mode)
         
-        self.epsilon = 10
+        self.epsilon = 5
         self.constrain_odd = constrain_odd
         self.constrain_nonaffine = constrain_nonaffine
         self.constrain_nonlinear = constrain_nonlinear
@@ -115,7 +115,7 @@ class WitsEnvConstrained(WitsEnvSuper):
         # and require f(0) = 0
         if self.constrain_new:
             num_points = 1000
-            linear_data_spread = torch.arange(-20.0, 20.0, 40.0/float(num_points))
+            linear_data_spread = torch.linspace(-3*self.sigma, 3*self.sigma, num_points)
             linear_data_spread = linear_data_spread.reshape(linear_data_spread.shape[0], 1)
 
             fun_1 = actor_c1(linear_data_spread)
@@ -124,8 +124,8 @@ class WitsEnvConstrained(WitsEnvSuper):
             first_linear_gradient = (torch.transpose(linear_data_spread, 0, 1) @ fun_1)/(torch.transpose(linear_data_spread, 0, 1) @ linear_data_spread)
             second_linear_gradient = (torch.transpose(linear_data_spread, 0, 1) @ fun_2)/(torch.transpose(linear_data_spread, 0, 1) @ linear_data_spread)
             
-            first_area = torch.trapz(torch.abs(fun_1-first_linear_gradient*linear_data_spread), dx=40.0/float(num_points))
-            second_area = torch.trapz(torch.abs(fun_2-second_linear_gradient*linear_data_spread), dx=40.0/float(num_points))
+            first_area = torch.trapz(y=torch.abs(fun_1-first_linear_gradient*linear_data_spread), x=linear_data_spread)
+            second_area = torch.trapz(y=torch.abs(fun_2-second_linear_gradient*linear_data_spread), x=linear_data_spread)
 
             first_at_zero = actor_c1(torch.zeros(2, 1))[0]
             second_at_zero = actor_c2(torch.zeros(2, 1))[0]
