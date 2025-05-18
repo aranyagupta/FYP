@@ -63,7 +63,7 @@ class WitsGradDescConstrained(WitsTrainer):
 		start = time.time()
 		for batch in range(batches):
 			# print("batch:", batch)
-			reward = self.env.step_timesteps(self.actor_c1, self.actor_c2, self.lamb_0, self.lamb_1, self.mu_0, self.mu_1, timesteps, noise=self.noise)
+			reward = self.env.step_timesteps(self.actor_c1, self.actor_c2, self.lamb_0, self.lamb_1, self.mu_0, self.mu_1, timesteps)
 			
 			actor_loss = reward.mean()
 			print("LAG LOSS:",actor_loss)
