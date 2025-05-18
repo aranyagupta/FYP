@@ -9,7 +9,7 @@ configs = [
     {
         "kvals":[0.77],
         "sigvals":[2.2361, 3.1623, 3.8730, 4.4721, 5.0000, 5.4772, 5.9161, 6.3246, 6.7082],
-        "kanHyps":[[1,10,1],[1,11,1],[1,12,1]],
+        "kanHyps":[[1,12,1]],
         "kanType":kan.KAN,
         "env":WitsEnv.WitsEnv,
         "trainer":WitsPPO.WitsGradDesc,
@@ -21,7 +21,7 @@ configs = [
     {
         "kvals":[0.77],
         "sigvals":[2.2361, 3.1623, 3.8730, 4.4721, 5.0000, 5.4772, 5.9161, 6.3246, 6.7082],
-        "kanHyps":[[1,10,1],[1,11,1],[1,12,1]],
+        "kanHyps":[[1,12,1]],
         "kanType":kan.KAN,
         "env":WitsEnv.WitsEnvLSA,
         "trainer":WitsPPO.WitsLSA,
@@ -33,7 +33,7 @@ configs = [
     {
         "kvals":[0.77],
         "sigvals":[2.2361, 3.1623, 3.8730, 4.4721, 5.0000, 5.4772, 5.9161, 6.3246, 6.7082],
-        "kanHyps":[[1,10,1],[1,11,1],[1,12,1]],
+        "kanHyps":[[1,12,1]],
         "kanType":kan.KAN,
         "env":WitsEnv.WitsEnvFGD,
         "trainer":WitsPPO.WitsFGD,
@@ -45,7 +45,7 @@ configs = [
     {
         "kvals":[0.5477],
         "sigvals":[5.0000],
-        "kanHyps":[[1,10,1],[1,11,1],[1,12,1]],
+        "kanHyps":[[1,12,1]],
         "kanType":kan.KAN,
         "env":WitsEnv.WitsEnvConstrained,
         "trainer":WitsPPO.WitsGradDescConstrained,
