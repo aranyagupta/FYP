@@ -33,7 +33,7 @@ class WitsGradDesc(WitsTrainer):
 		start = time.time()
 		for batch in range(batches):
 			# print("batch:", batch)
-			reward = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps, noise=self.noise)
+			reward = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps)
 			
 			actor_loss = reward.mean()
 			print("DGD LOSS:",actor_loss)
@@ -117,7 +117,7 @@ class WitsAlternatingDescent(WitsTrainer):
 	def train(self, timesteps, batches, n_repeats=1):
 		for batch in range(batches):
 			for n in range(n_repeats):
-				reward = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps, noise=self.noise)
+				reward = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps)
 				actor_loss = reward.mean()
 
 				self.actor_c2_optim.zero_grad()
@@ -126,7 +126,7 @@ class WitsAlternatingDescent(WitsTrainer):
 				print("ALTERNATING LOSS:", actor_loss)
 			
 			for n in range(n_repeats):
-				reward = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps, noise=self.noise)
+				reward = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps)
 				actor_loss = reward.mean()
 				
 				self.actor_c1_optim.zero_grad()
