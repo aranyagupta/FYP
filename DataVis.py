@@ -8,7 +8,7 @@ def get_loss_from_file(filename, models_loss_dir="./wits_models_loss_storage/"):
     loss_text = float(loss_text[11:])
     return loss_text
 
-def getLosses(dgd=True, dgdcomb=False, ppo=False, lag=False, hyps=[[1,0],[2,0],[2,0],[1,0]], models_loss_dir="./wits_models_loss_storage/"):
+def getLosses(dgd=True, dgdcomb=False, ppo=False, lag=False, lsa=False, fgd=False, hyps=[[1,0],[2,0],[2,0],[1,0]], models_loss_dir="./wits_models_loss_storage/"):
     files = os.listdir(models_loss_dir)
     if not dgdcomb:
         files = [x for x in files if x[:7]!="DGDCOMB"]
@@ -18,6 +18,10 @@ def getLosses(dgd=True, dgdcomb=False, ppo=False, lag=False, hyps=[[1,0],[2,0],[
         files = [x for x in files if x[:3]!="PPO"]
     if not lag:
         files = [x for x in files if x[:3]!="LAG"]
+    if not lsa:
+        files = [x for x in files if x[:3]!="LSA"]
+    if not fgd:
+        files = [x for x in files if x[:3]!="FGD"]
 
     files = [file for file in files if str(hyps) in file]
 
@@ -36,6 +40,12 @@ def create_heatmap(x_values, y_values, z_values, cmap='viridis', title="Heatmap"
     x_unique = np.unique(x_values)
     y_unique = np.unique(y_values)
     x_grid, y_grid = np.meshgrid(x_unique, y_unique)
+
+    # Ensure at least 2 unique values in each axis for proper heatmap plotting
+    if len(x_unique) == 1:
+        x_unique = np.append(x_unique, x_unique[0] + 1)
+    if len(y_unique) == 1:
+        y_unique = np.append(y_unique, y_unique[0] + 1)
 
     # Create a 2D array for z values
     

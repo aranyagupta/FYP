@@ -32,12 +32,6 @@ if __name__ == "__main__":
             f = TestingFramework.test_dir(c["path"], c["env"])
     else:
         pass
-    # if TRAIN_DGD:
-    #     kanType = kan.KAN
-    #     env = WitsEnv.WitsEnv
-    #     gradDesc = WitsPPO.WitsGradDesc
-    #     modelType = 'DGD'
-    #     f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda sigma, x : sigma * torch.sign(x), prefit_func_2=lambda sigma, x: sigma*torch.tanh(sigma*x))
     # if TRAIN_DGDCOMB:
     #     kanType = CombinedKan.CombinedKan
     #     env = WitsEnv.WitsEnvCombined
@@ -50,28 +44,10 @@ if __name__ == "__main__":
     #     gradDesc = WitsPPO.WitsAlternatingDescent
     #     modelType = "ALTERNATING"
     #     f.train_framework(kanType, env, gradDesc, modelType)
-    # if TRAIN_LAG:
-    #     kanType = kan.KAN
-    #     env = WitsEnv.WitsEnvConstrained
-    #     gradDesc = WitsPPO.WitsGradDescConstrained
-    #     modelType = "LAG"
-    #     f.train_framework(kanType, env, gradDesc, modelType)
-    # if TRAIN_LSA:
-    #     kanType = kan.KAN
-    #     env = WitsEnv.WitsEnvLSA
-    #     gradDesc = WitsPPO.WitsLSA
-    #     modelType="LSA"
-    #     f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda sigma, x : sigma * torch.sign(x))
-    # if TRAIN_FGD:
-    #     kanType = kan.KAN
-    #     env = WitsEnv.WitsEnvFGD
-    #     gradDesc = WitsPPO.WitsFGD
-    #     modelType = "FGD"
-    #     f.train_framework(kanType, env, gradDesc, modelType, prefit_func_1=lambda sigma, x : sigma * torch.sign(x), prefit_func_2=lambda sigma, x: sigma*torch.tanh(sigma*x))
 
     if DISPLAY_HEATMAP:
-        hyps =  [[1,0],[2,0],[2,0],[2,0],[1,0]]
-        kvals, sigvals, losses = getLosses(dgd=False, dgdcomb=False, ppo=False, lag=True, hyps=hyps, models_loss_dir="./constrained_experiments/lag_constrained_area_and_origin_loss/")
+        hyps =  [[1,0],[12,0],[1,0]]
+        kvals, sigvals, losses = getLosses(dgd=False, dgdcomb=False, ppo=False, lag=False, lsa=False, fgd=True, hyps=hyps, models_loss_dir="./FGD_loss/")
 
         kvals_squared = [round(k**2/0.05)*0.05 for k in kvals]
         varvals = [round(s**2/5.0)*5.0 for s in sigvals]
@@ -80,16 +56,16 @@ if __name__ == "__main__":
         # lookup = generateLookupTable(kvals, sigvals, losses)
         # print(lookup[(0.3, 4.6)])
 
-        modelType = 'LAG'
+        modelType = 'FGD'
 
-        create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title=f"{modelType} {[x[0] for x in hyps]} Model Costs (Area constraint)")
+        create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title=f"{modelType} {[x[0] for x in hyps]} Model Costs")
     
     if DISPLAY_SYMBOLIC:
-        hyps = [[1,0],[11,0],[1,0]]
+        hyps = [[1,0],[12,0],[1,0]]
 
         # LINEAR (UNINTENTIONAL - SHOULD BE 3-STEP)
-        k = "0.20"
-        sigma = "5.00"  
+        k = "0.22"
+        sigma = "5.00"
 
         # 3 STEP: TBF
         # k = 0.22
@@ -99,9 +75,9 @@ if __name__ == "__main__":
         # k = 0.39
         # sigma = 3.87
 
-        modelType = 'LSA'
+        modelType = 'FGD'
         
-        name = f"wits_models/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
+        name = f"FGD_models/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
         actor_c1 = kan.KAN.loadckpt(name+"c1")
         actor_c2 = kan.KAN.loadckpt(name+"c2")
         act_fun_c1 = actor_c1.act_fun
@@ -113,8 +89,8 @@ if __name__ == "__main__":
             actor_c2.plot()
             plt.show()
         
-            plot_model_bruteforce(actor_c1, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C1, hyps={[x[0] for x in hyps]}, k={k}, sig={sigma}, {modelType}")
-            plot_model_bruteforce(actor_c2, device=device, range=(-20.0, 20.0), title=f"Reconstruction: C2, hyps={[x[0] for x in hyps]}, k={k}, sig={sigma}, {modelType}")
+            plot_model_bruteforce(actor_c1, device=device, range=(-15.0, 15.0), title=f"Reconstruction: C1, hyps={[x[0] for x in hyps]}, k={k}, sig={sigma}, {modelType}")
+            plot_model_bruteforce(actor_c2, device=device, range=(-15.0, 15.0), title=f"Reconstruction: C2, hyps={[x[0] for x in hyps]}, k={k}, sig={sigma}, {modelType}")
 
 
         # individual_functions_c1 = individual_kanlayers(act_fun_c1)
