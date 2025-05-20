@@ -14,9 +14,9 @@ print(device)
 torch.set_default_device(device=device)
 
 DISPLAY_HEATMAP = False
-DISPLAY_SYMBOLIC = False
+DISPLAY_SYMBOLIC = True
 
-PLOT_GRAPHS = False
+PLOT_GRAPHS = True
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -65,8 +65,8 @@ if __name__ == "__main__":
         hyps = [[1,0],[12,0],[1,0]]
 
         # LINEAR (UNINTENTIONAL - SHOULD BE 3-STEP)
-        k = "0.77"
-        sigma = "2.24"
+        k = "1.00"
+        sigma = "6.71"
 
         # 3 STEP: TBF
         # k = 0.22

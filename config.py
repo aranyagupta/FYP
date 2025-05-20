@@ -7,14 +7,14 @@ Training configurations
 """
 configs = [
     {
-        "kvals":[1.0],
-        "sigvals":[2.2361, 6.7082],
-        "kanHyps":[[1,12,1]],
+        "kvals":[0.2],
+        "sigvals":[5.0],
+        "kanHyps":[[1,20,1]],
         "kanType":kan.KAN,
         "env":WitsEnv.WitsEnvFGD,
         "trainer":WitsPPO.WitsFGD,
         "modelType":"FGD",
-        "prefit_func_1": lambda sigma, x : sigma*torch.sign(x),
+        "prefit_func_1": lambda sigma, x : sigma*torch.tanh(sigma*x),
         "prefit_func_2": lambda sigma, x : sigma*torch.tanh(sigma*x),
         "lr":0.01,
     },

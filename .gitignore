@@ -184,3 +184,5 @@ LSA_loss/
 LSA_models/
 FGD_loss/
 FGD_models/
+verif_models/
+verif_models_loss/
