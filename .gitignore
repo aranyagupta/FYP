@@ -186,3 +186,5 @@ FGD_loss/
 FGD_models/
 verif_models/
 verif_models_loss/
+momentum_models/
+momentum_loss/
