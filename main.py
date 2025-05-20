@@ -29,6 +29,7 @@ if __name__ == "__main__":
             f.train_framework(c["kanType"], c["env"], c["trainer"], c["modelType"], prefit_func_1=c["prefit_func_1"], prefit_func_2=c["prefit_func_2"], lr=c["lr"])
     elif mode.lower() == "test":
         for c in config.testConfigs:
+            f = TestingFramework.r2_dir(c["path"])
             f = TestingFramework.test_dir(c["path"], c["env"])
     else:
         pass
@@ -59,13 +60,13 @@ if __name__ == "__main__":
         modelType = 'FGD'
 
         create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title=f"{modelType} {[x[0] for x in hyps]} Model Costs")
-    
+
     if DISPLAY_SYMBOLIC:
         hyps = [[1,0],[12,0],[1,0]]
 
         # LINEAR (UNINTENTIONAL - SHOULD BE 3-STEP)
-        k = "0.22"
-        sigma = "5.00"
+        k = "0.77"
+        sigma = "2.24"
 
         # 3 STEP: TBF
         # k = 0.22
@@ -77,17 +78,17 @@ if __name__ == "__main__":
 
         modelType = 'FGD'
         
-        name = f"FGD_models/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
+        name = f"verif_models/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
         actor_c1 = kan.KAN.loadckpt(name+"c1")
         actor_c2 = kan.KAN.loadckpt(name+"c2")
         act_fun_c1 = actor_c1.act_fun
         act_fun_c2 = actor_c2.act_fun
         
         if PLOT_GRAPHS:
-            actor_c1.plot()
-            plt.show()
-            actor_c2.plot()
-            plt.show()
+            # actor_c1.plot()
+            # plt.show()
+            # actor_c2.plot()
+            # plt.show()
         
             plot_model_bruteforce(actor_c1, device=device, range=(-15.0, 15.0), title=f"Reconstruction: C1, hyps={[x[0] for x in hyps]}, k={k}, sig={sigma}, {modelType}")
             plot_model_bruteforce(actor_c2, device=device, range=(-15.0, 15.0), title=f"Reconstruction: C2, hyps={[x[0] for x in hyps]}, k={k}, sig={sigma}, {modelType}")
