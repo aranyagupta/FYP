@@ -329,7 +329,7 @@ class WitsEnvFGD(WitsEnvSuper):
     def __init__(self, k, sigma, device, mode='TRAIN'):
         super().__init__(k, sigma, device, mode=mode)
         if mode == 'TEST':
-            TEST_TIMESTEPS = 100000
+            TEST_TIMESTEPS = 20000
             self.x_0 = torch.normal(0, self.sigma, (TEST_TIMESTEPS,1), device=self.device)
             self.noise = torch.normal(0, 1, (TEST_TIMESTEPS, 1), device=self.device)
 
@@ -414,10 +414,13 @@ class WitsEnvFGD(WitsEnvSuper):
 # implements zeta_k+1 = beta * zeta_k + (1-beta)*frechetgradient_k
 # mu_k+1 = mu_k - tau*zeta_k+1
 class WitsEnvMomentum(WitsEnvSuper):
-    def __init__(self, k, sigma, device, mode='TRAIN', beta=0.05):
+    def __init__(self, k, sigma, device, mode='TRAIN', beta=0.10):
         super().__init__(k, sigma, device, mode=mode)
         self.beta = beta
-        
+        TEST_TIMESTEPS = 20000
+        self.x_0 = torch.normal(0, self.sigma, (TEST_TIMESTEPS,1), device=self.device)
+        self.noise = torch.normal(0, 1, (TEST_TIMESTEPS, 1), device=self.device)
+    
     def step_timesteps(self, actor_c1, actor_c2, timesteps=100000, zeta_1 = torch.zeros((1,1)), zeta_2=torch.zeros((1,1))):
         if self.mode == 'TEST':
             x1 = actor_c1(self.x_0)
