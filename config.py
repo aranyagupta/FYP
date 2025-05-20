@@ -14,8 +14,8 @@ configs = [
         "env":WitsEnv.WitsEnvFGD,
         "trainer":WitsPPO.WitsFGD,
         "modelType":"FGD",
-        "prefit_func_1": lambda sigma, x : sigma*torch.tanh(sigma*x),
-        "prefit_func_2": lambda sigma, x : sigma*torch.tanh(sigma*x),
+        "prefit_func_1": lambda x : x,
+        "prefit_func_2": lambda x : x,
         "lr":0.01,
     },
     # {
