@@ -194,3 +194,33 @@ class WitsFGD(WitsTrainer):
 			self.actor_c1_optim.step()
 
 			print("PERFORMANCE:", J)
+
+# FGD with momentum
+class WitsMomentum(WitsTrainer):
+	def __init__(self, env, actor_c1, actor_c2, lr=0.01):
+		super().__init__(env, actor_c1, actor_c2, lr)
+		self.tau = 1e-3 # tau as defined in paper, scaling factor for gradient
+		self.zeta_1 = torch.zeros((1,1))
+		self.zeta_2 = torch.zeros((1,1))
+
+	def train(self, timesteps, batches):
+		# print("batch:", batch)
+		if self.zeta_1.shape == torch.Size([1, 1]):
+			self.zeta_1.expand((timesteps, 1))
+			self.zeta_2.expand((timesteps, 1))
+		elif self.zeta_1.shape != torch.Size([timesteps, 1]):
+			raise Exception("Changed timesteps in between training - not allowed!")
+		
+		for batch in range(batches):
+			gradient_1, gradient_2, out_1, out_2, J = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps=timesteps, zeta_1=self.zeta_1, zeta_2=self.zeta_2)
+			
+			self.actor_c1_optim.zero_grad()
+			self.actor_c2_optim.zero_grad()
+
+			out_1.backward(gradient=self.tau*gradient_1, retain_graph=True)
+			out_2.backward(gradient=self.tau*gradient_2, retain_graph=True)
+
+			self.actor_c2_optim.step()
+			self.actor_c1_optim.step()
+
+			print("PERFORMANCE:", J)

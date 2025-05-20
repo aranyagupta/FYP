@@ -14,9 +14,9 @@ print(device)
 torch.set_default_device(device=device)
 
 DISPLAY_HEATMAP = False
-DISPLAY_SYMBOLIC = True
+DISPLAY_SYMBOLIC = False
 
-PLOT_GRAPHS = True
+PLOT_GRAPHS = False
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:

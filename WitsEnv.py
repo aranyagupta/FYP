@@ -329,7 +329,7 @@ class WitsEnvFGD(WitsEnvSuper):
     def __init__(self, k, sigma, device, mode='TRAIN'):
         super().__init__(k, sigma, device, mode=mode)
         if mode == 'TEST':
-            TEST_TIMESTEPS = 20000
+            TEST_TIMESTEPS = 100000
             self.x_0 = torch.normal(0, self.sigma, (TEST_TIMESTEPS,1), device=self.device)
             self.noise = torch.normal(0, 1, (TEST_TIMESTEPS, 1), device=self.device)
 
@@ -410,6 +410,64 @@ class WitsEnvFGD(WitsEnvSuper):
 
         return frechet_grad_1, frechet_grad_2, x1, x2, J 
 
+# momentum-based frechet gradient descent
+# implements zeta_k+1 = beta * zeta_k + (1-beta)*frechetgradient_k
+# mu_k+1 = mu_k - tau*zeta_k+1
+class WitsEnvMomentum(WitsEnvSuper):
+    def __init__(self, k, sigma, device, mode='TRAIN', beta=0.05):
+        super().__init__(k, sigma, device, mode=mode)
+        self.beta = beta
+        
+    def step_timesteps(self, actor_c1, actor_c2, timesteps=100000, zeta_1 = torch.zeros((1,1)), zeta_2=torch.zeros((1,1))):
+        if self.mode == 'TEST':
+            x1 = actor_c1(self.x_0)
+            y1 = self.noise + x1
+            x2 = actor_c2(y1)
+
+            reward = self.k**2 * (x1 - self.x_0) ** 2 + (x2-x1)**2
+            return reward.mean()
+
+        # wrap to allow jacobian vector product to work        
+        def mu_2(x):
+            return actor_c2(x)
+
+
+        x0 = torch.normal(0, self.sigma, (timesteps, 1), device=self.device)
+
+        ones = torch.ones_like(x0, device=self.device)
+        # calculates mu_1(x0) and dmu_1(y)/dy at y = x0
+        x1 = actor_c1(x0)
+
+        noise = torch.normal(0, 1, (timesteps, 1), device=self.device)
+        y2 = x1 + noise
+
+
+        # calculates mu_2(y2) and dmu_2(y)/dy at y = mu_1(x0)+eta
+        x2, dmu_2_dy = torch.func.jvp(mu_2, (y2,), (ones,))
+
+        if torch.any(torch.isnan(x2)):
+            print("x2 has nan")
+        if torch.any(torch.isinf(x2)):
+            print("x2 has inf")
+
+        if torch.any(torch.isnan(dmu_2_dy)):
+            print("dmu_2_dy has nan")
+        if torch.any(torch.isinf(dmu_2_dy)):
+            print("dmu_2_dy has inf")
+        
+        frechet_grad_1 = 2*self.k**2*(x1-x0) + 2*(x1-x2)*(1-dmu_2_dy)
+        frechet_grad_2 = -2*(x1 - x2)
+
+        zeta_1 = self.beta*zeta_1 + (1-self.beta)*frechet_grad_1
+        zeta_2 = self.beta*zeta_2 + (1-self.beta)*frechet_grad_2
+
+        J = 0
+        with torch.no_grad():
+            J = self.k**2*(x1-x0)**2 + (x2-x1)**2
+            J = J.mean()
+
+        return zeta_1, zeta_2, x1, x2, J 
+    
 # ----------------- Simplified Environments ----------------- #
 class WitsEnvSimple():
     '''

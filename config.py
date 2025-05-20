@@ -7,6 +7,18 @@ Training configurations
 """
 configs = [
     {
+        "kvals":[0.2, 0.1, 0.3, 0.4, 0.5],
+        "sigvals":[5.0, 2.2361, 3.1623, 3.8730, 4.4721, 5.4772],
+        "kanHyps":[[1,20,1]],
+        "kanType":kan.KAN,
+        "env":WitsEnv.WitsEnvMomentum,
+        "trainer":WitsPPO.WitsMomentum,
+        "modelType":"MOM",
+        "prefit_func_1": lambda s, x : s*torch.sign(x),
+        "prefit_func_2": lambda s, x : s*torch.tanh(s*x),
+        "lr":0.01,
+    },
+    {
         "kvals":[0.2],
         "sigvals":[5.0],
         "kanHyps":[[1,20,1]],
