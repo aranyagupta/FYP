@@ -8,7 +8,7 @@ Training configurations
 configs = [
     {
         "kvals":[1.0],
-        "sigvals":[2.2361, 3.1623, 3.8730, 4.4721, 5.0000, 5.4772, 5.9161, 6.3246, 6.7082],
+        "sigvals":[2.2361, 6.7082],
         "kanHyps":[[1,12,1]],
         "kanType":kan.KAN,
         "env":WitsEnv.WitsEnvFGD,
