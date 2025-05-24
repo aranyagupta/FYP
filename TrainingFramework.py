@@ -95,6 +95,8 @@ class TrainingFramework:
                     best_loss = 1e7
                     if type(alg) == WitsPPO.WitsLSA:
                         alg.train(5000,1)
+                    elif type(alg) == WitsPPO.WitsMomentum:
+                        alg.train(5000,1000)
                     else:
                         alg.train(100000, 1000)
                     
@@ -108,6 +110,9 @@ class TrainingFramework:
                             break
                         
                         best_loss = loss
-                        alg.train(100000, 100)
+                        if type(alg) == WitsPPO.WitsMomentum:
+                            alg.train(5000,1)
+                        else:
+                            alg.train(100000, 100)
                         loss = testEnv.step_timesteps(actor_c1, actor_c2, timesteps=100000)
                         print("TEST LOSS:", loss)

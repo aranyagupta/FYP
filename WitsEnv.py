@@ -430,23 +430,32 @@ class WitsEnvMomentum(WitsEnvSuper):
             reward = self.k**2 * (x1 - self.x_0) ** 2 + (x2-x1)**2
             return reward.mean()
 
+        f_X = lambda x : 1.0/(self.sigma* torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-x**2/(2*self.sigma**2))
+        f_W = lambda w : 1.0/(torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-w**2/(2))
         # wrap to allow jacobian vector product to work        
         def mu_2(x):
             return actor_c2(x)
 
 
-        x0 = torch.normal(0, self.sigma, (timesteps, 1), device=self.device)
+        x0 = torch.linspace(-3*self.sigma, 3*self.sigma, steps=timesteps, device=self.device)
+        x0 = x0.reshape((timesteps, 1))
 
         ones = torch.ones_like(x0, device=self.device)
-        # calculates mu_1(x0) and dmu_1(y)/dy at y = x0
+        # calculates mu_1(x0)
         x1 = actor_c1(x0)
 
-        noise = torch.normal(0, 1, (timesteps, 1), device=self.device)
-        y2 = x1 + noise
+
+        noise_int = torch.linspace(-3.0, 3.0, steps=timesteps, device=self.device)
+        noise = noise_int.reshape((timesteps, 1))
+        noise_exp = noise.expand((timesteps, timesteps)).T
+        y2 = x1 + noise_exp
+        y2_calc = y2.reshape(timesteps*timesteps, 1)
 
 
         # calculates mu_2(y2) and dmu_2(y)/dy at y = mu_1(x0)+eta
-        x2, dmu_2_dy = torch.func.jvp(mu_2, (y2,), (ones,))
+        x2, dmu_2_dy = torch.func.jvp(mu_2, (y2_calc,), (ones,))
+        x2 = x2.reshape(timesteps, timesteps)
+        dmu_2_dy = dmu_2_dy.reshape(timesteps, timesteps)
 
         if torch.any(torch.isnan(x2)):
             print("x2 has nan")
@@ -458,8 +467,12 @@ class WitsEnvMomentum(WitsEnvSuper):
         if torch.any(torch.isinf(dmu_2_dy)):
             print("dmu_2_dy has inf")
         
-        frechet_grad_1 = 2*self.k**2*(x1-x0) + 2*(x1-x2)*(1-dmu_2_dy)
-        frechet_grad_2 = -2*(x1 - x2)
+        frechet_grad_1 = 2*self.k**2*(x1-x0)*f_X(x0)
+        integrand_1 = 2*(x2-x1)*(dmu_2_dy-1)*f_X(x0)*f_W(noise_exp)
+        integral_1 = torch.trapz(integrand_1, noise_int, dim=1).reshape(timesteps, 1)
+        frechet_grad_1 = frechet_grad_1 + integral_1
+        integrand_2 = -2*(x1 - x2)*f_X(x0)*f_W(noise_exp)
+        frechet_grad_2 = torch.trapz(integrand_2, noise_int, dim=1).reshape(timesteps, 1)
 
         zeta_1 = self.beta*zeta_1 + (1-self.beta)*frechet_grad_1
         zeta_2 = self.beta*zeta_2 + (1-self.beta)*frechet_grad_2
