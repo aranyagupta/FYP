@@ -335,12 +335,13 @@ class WitsEnvFGD(WitsEnvSuper):
 
     def step_timesteps(self, actor_c1, actor_c2, timesteps=10000):
         if self.mode == 'TEST':
-            x1 = actor_c1(self.x_0)
-            y1 = self.noise + x1
-            x2 = actor_c2(y1)
+            with torch.no_grad():
+                x1 = actor_c1(self.x_0)
+                y1 = self.noise + x1
+                x2 = actor_c2(y1)
 
-            reward = self.k**2 * (x1 - self.x_0) ** 2 + (x2-x1)**2
-            return reward.mean()
+                reward = self.k**2 * (x1 - self.x_0) ** 2 + (x2-x1)**2
+                return reward.mean()
 
         # wrap to allow jacobian vector product to work
         def mu_1(x):
@@ -417,18 +418,19 @@ class WitsEnvMomentum(WitsEnvSuper):
     def __init__(self, k, sigma, device, mode='TRAIN', beta=0.10):
         super().__init__(k, sigma, device, mode=mode)
         self.beta = beta
-        TEST_TIMESTEPS = 20000
+        TEST_TIMESTEPS = 100000
         self.x_0 = torch.normal(0, self.sigma, (TEST_TIMESTEPS,1), device=self.device)
         self.noise = torch.normal(0, 1, (TEST_TIMESTEPS, 1), device=self.device)
     
     def step_timesteps(self, actor_c1, actor_c2, timesteps=2000, zeta_1 = torch.zeros((1,1)), zeta_2=torch.zeros((1,1))):
         if self.mode == 'TEST':
-            x1 = actor_c1(self.x_0)
-            y1 = self.noise + x1
-            x2 = actor_c2(y1)
+            with torch.no_grad():
+                x1 = actor_c1(self.x_0)
+                y1 = self.noise + x1
+                x2 = actor_c2(y1)
 
-            reward = self.k**2 * (x1 - self.x_0) ** 2 + (x2-x1)**2
-            return reward.mean()
+                reward = self.k**2 * (x1 - self.x_0) ** 2 + (x2-x1)**2
+                return reward.mean()
 
         f_X = lambda x : 1.0/(self.sigma* torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-x**2/(2*self.sigma**2))
         f_W = lambda w : 1.0/(torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-w**2/(2))
