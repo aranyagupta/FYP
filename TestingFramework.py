@@ -18,7 +18,7 @@ def extract_info(file):
     except:
         k = -1
         sigma = -1
-    return file[:i], k, sigma
+    return file[:i], abs(k), abs(sigma)
             
 
 def calculate_r2(actor, device, range=(-15.0, 15.0)):
