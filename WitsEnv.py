@@ -497,6 +497,7 @@ class WitsEnvMomentum(WitsEnvSuper):
 
             J1 = torch.trapz(J1, x0, dim=0)
             J2 = torch.trapz(J2, y2_int, dim=1)
+            J2 = J2.reshape(timesteps, 1)
             J2 = torch.trapz(J2, x0, dim=0)
 
             J = J1 + J2
