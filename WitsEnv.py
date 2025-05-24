@@ -414,7 +414,7 @@ class WitsEnvFGD(WitsEnvSuper):
 # implements zeta_k+1 = beta * zeta_k + (1-beta)*frechetgradient_k
 # mu_k+1 = mu_k - tau*zeta_k+1
 class WitsEnvMomentum(WitsEnvSuper):
-    def __init__(self, k, sigma, device, mode='TRAIN', beta=0.05):
+    def __init__(self, k, sigma, device, mode='TRAIN', beta=0.10):
         super().__init__(k, sigma, device, mode=mode)
         self.beta = beta
         TEST_TIMESTEPS = 20000
@@ -437,7 +437,7 @@ class WitsEnvMomentum(WitsEnvSuper):
             return actor_c2(x)
 
 
-        x0 = torch.linspace(-3*self.sigma, 3*self.sigma, steps=timesteps, device=self.device)
+        x0 = torch.linspace(-4*self.sigma, 4*self.sigma, steps=timesteps, device=self.device)
         x0 = x0.reshape((timesteps, 1))
 
         # calculates mu_1(x0)
@@ -451,7 +451,7 @@ class WitsEnvMomentum(WitsEnvSuper):
         # y2_calc = y2.reshape(timesteps*timesteps, 1)
         # ones = torch.ones_like(y2_calc, device=self.device)
 
-        y2_int = torch.linspace(-3*self.sigma, 3*self.sigma, steps=timesteps, device=self.device)
+        y2_int = torch.linspace(-4*self.sigma, 4*self.sigma, steps=timesteps, device=self.device)
         y2 = y2_int.reshape((timesteps, 1))
         y2_exp = y2.expand((timesteps, timesteps)).T
         ones = torch.ones_like(y2, device=self.device)
