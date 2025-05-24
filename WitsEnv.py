@@ -472,9 +472,9 @@ class WitsEnvMomentum(WitsEnvSuper):
         if torch.any(torch.isinf(dmu_2_dy)):
             print("dmu_2_dy has inf")
 
-        print("x0.shape:", x0.shape)
-        print("x1.shape:", x1.shape)
-        print("x2.shape:", x2.shape)
+        # print("x0.shape:", x0.shape)
+        # print("x1.shape:", x1.shape)
+        # print("x2.shape:", x2.shape)
         
         frechet_grad_1 = 2*self.k**2*(x1-x0)*f_X(x0)
         integrand_1 = 2*(x2_exp-x1)*(dmu_2_dy_exp-1)*f_X(x0)*f_W(y2_exp-x1)
@@ -483,10 +483,10 @@ class WitsEnvMomentum(WitsEnvSuper):
         integrand_2 = -2*(x1 - x2_exp)*f_X(x0)*f_W(y2_exp-x1)
         frechet_grad_2 = torch.trapz(integrand_2, y2_int, dim=1).reshape(timesteps, 1)
 
-        print("integrand_1.shape:", integrand_1.shape)
-        print("frechet_grad_1.shape:", frechet_grad_1.shape)
-        print("integrand_2.shape:", integrand_2.shape)
-        print("frechet_grad_2.shape:", frechet_grad_2.shape)
+        # print("integrand_1.shape:", integrand_1.shape)
+        # print("frechet_grad_1.shape:", frechet_grad_1.shape)
+        # print("integrand_2.shape:", integrand_2.shape)
+        # print("frechet_grad_2.shape:", frechet_grad_2.shape)
 
         zeta_1 = self.beta*zeta_1 + (1-self.beta)*frechet_grad_1
         zeta_2 = self.beta*zeta_2 + (1-self.beta)*frechet_grad_2
