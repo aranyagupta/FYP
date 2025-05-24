@@ -444,18 +444,23 @@ class WitsEnvMomentum(WitsEnvSuper):
         x1 = actor_c1(x0)
 
 
-        noise_int = torch.linspace(-3.0, 3.0, steps=timesteps, device=self.device)
-        noise = noise_int.reshape((timesteps, 1))
-        noise_exp = noise.expand((timesteps, timesteps)).T
-        y2 = x1 + noise_exp
-        y2_calc = y2.reshape(timesteps*timesteps, 1)
-        ones = torch.ones_like(y2_calc, device=self.device)
+        # noise_int = torch.linspace(-3.0, 3.0, steps=timesteps, device=self.device)
+        # noise = noise_int.reshape((timesteps, 1))
+        # noise_exp = noise.expand((timesteps, timesteps)).T
+        # y2 = x1 + noise_exp
+        # y2_calc = y2.reshape(timesteps*timesteps, 1)
+        # ones = torch.ones_like(y2_calc, device=self.device)
+
+        y2_int = torch.linspace(-3*self.sigma, 3*self.sigma, steps=timesteps, device=self.device)
+        y2 = y2_int.reshape((timesteps, 1))
+        y2_exp = y2.expand((timesteps, timesteps)).T
+        ones = torch.ones_like(y2, device=self.device)
 
 
         # calculates mu_2(y2) and dmu_2(y)/dy at y = mu_1(x0)+eta
-        x2, dmu_2_dy = torch.func.jvp(mu_2, (y2_calc,), (ones,))
-        x2 = x2.reshape(timesteps, timesteps)
-        dmu_2_dy = dmu_2_dy.reshape(timesteps, timesteps)
+        x2, dmu_2_dy = torch.func.jvp(mu_2, (y2,), (ones,))
+        x2_exp = x2.expand(timesteps, timesteps)
+        dmu_2_dy_exp = dmu_2_dy.expand(timesteps, timesteps)
 
         if torch.any(torch.isnan(x2)):
             print("x2 has nan")
@@ -472,11 +477,11 @@ class WitsEnvMomentum(WitsEnvSuper):
         print("x2.shape:", x2.shape)
         
         frechet_grad_1 = 2*self.k**2*(x1-x0)*f_X(x0)
-        integrand_1 = 2*(x2-x1)*(dmu_2_dy-1)*f_X(x0)*f_W(noise_exp)
-        integral_1 = torch.trapz(integrand_1, noise_int, dim=1).reshape(timesteps, 1)
+        integrand_1 = 2*(x2_exp-x1)*(dmu_2_dy_exp-1)*f_X(x0)*f_W(y2_exp-x1)
+        integral_1 = torch.trapz(integrand_1, y2_int, dim=1).reshape(timesteps, 1)
         frechet_grad_1 = frechet_grad_1 + integral_1
-        integrand_2 = -2*(x1 - x2)*f_X(x0)*f_W(noise_exp)
-        frechet_grad_2 = torch.trapz(integrand_2, noise_int, dim=1).reshape(timesteps, 1)
+        integrand_2 = -2*(x1 - x2_exp)*f_X(x0)*f_W(y2_exp-x1)
+        frechet_grad_2 = torch.trapz(integrand_2, y2_int, dim=1).reshape(timesteps, 1)
 
         print("integrand_1.shape:", integrand_1.shape)
         print("frechet_grad_1.shape:", frechet_grad_1.shape)
