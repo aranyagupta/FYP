@@ -459,8 +459,8 @@ class WitsEnvMomentum(WitsEnvSuper):
 
         # calculates mu_2(y2) and dmu_2(y)/dy at y = mu_1(x0)+eta
         x2, dmu_2_dy = torch.func.jvp(mu_2, (y2,), (ones,))
-        x2_exp = x2.expand(timesteps, timesteps)
-        dmu_2_dy_exp = dmu_2_dy.expand(timesteps, timesteps)
+        x2_exp = x2.expand(timesteps, timesteps).T
+        dmu_2_dy_exp = dmu_2_dy.expand(timesteps, timesteps).T
 
         if torch.any(torch.isnan(x2)):
             print("x2 has nan")
