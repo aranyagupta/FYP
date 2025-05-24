@@ -456,7 +456,6 @@ class WitsEnvMomentum(WitsEnvSuper):
         y2_exp = y2.expand((timesteps, timesteps)).T
         ones = torch.ones_like(y2, device=self.device)
 
-
         # calculates mu_2(y2) and dmu_2(y)/dy at y = mu_1(x0)+eta
         x2, dmu_2_dy = torch.func.jvp(mu_2, (y2,), (ones,))
         x2_exp = x2.expand(timesteps, timesteps).T
@@ -493,8 +492,14 @@ class WitsEnvMomentum(WitsEnvSuper):
 
         J = 0
         with torch.no_grad():
-            J = self.k**2*(x1-x0)**2 + (x2-x1)**2
-            J = J.mean()
+            J1 = self.k**2*(x1-x0)**2*f_X(x0)
+            J2 = (x2_exp-x1)**2*f_X(x0)*f_W(y2_exp-x1)
+
+            J1 = torch.trapz(J1, x0, dim=0)
+            J2 = torch.trapz(J2, y2_int, dim=1)
+            J2 = torch.trapz(J2, x0, dim=0)
+
+            J = J1 + J2
 
         return zeta_1, zeta_2, x1, x2, J 
     
