@@ -440,7 +440,6 @@ class WitsEnvMomentum(WitsEnvSuper):
         x0 = torch.linspace(-3*self.sigma, 3*self.sigma, steps=timesteps, device=self.device)
         x0 = x0.reshape((timesteps, 1))
 
-        ones = torch.ones_like(x0, device=self.device)
         # calculates mu_1(x0)
         x1 = actor_c1(x0)
 
@@ -450,6 +449,7 @@ class WitsEnvMomentum(WitsEnvSuper):
         noise_exp = noise.expand((timesteps, timesteps)).T
         y2 = x1 + noise_exp
         y2_calc = y2.reshape(timesteps*timesteps, 1)
+        ones = torch.ones_like(y2_calc, device=self.device)
 
 
         # calculates mu_2(y2) and dmu_2(y)/dy at y = mu_1(x0)+eta
