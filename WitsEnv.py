@@ -479,7 +479,7 @@ class WitsEnvMomentum(WitsEnvSuper):
         f_W_deriv = lambda w : -w/(torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-w**2/(2))
         
         frechet_grad_1 = 2*self.k**2*(x1-x0)*f_X(x0)
-        integrand_1 = -(x2_exp-x1)**2*f_X(x0)*f_W_deriv(y2_exp-x1) -2*f_W(y2_exp-x1)*f_X(x0)*(x2_exp-x1)
+        integrand_1 = -(x2_exp-x1)**2*f_X(x0)*f_W_deriv(y2_exp-x1) + 2*f_W(y2_exp-x1)*f_X(x0)*(x2_exp-x1)*(dmu_2_dy_exp-1)
         integral_1 = torch.trapz(integrand_1, y2_int, dim=1).reshape(timesteps, 1)
         frechet_grad_1 = frechet_grad_1 + integral_1
         integrand_2 = 2*(x2_exp-x1)*f_X(x0)*f_W(y2_exp-x1)
