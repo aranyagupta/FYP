@@ -480,7 +480,7 @@ class WitsEnvMomentum(WitsEnvSuper):
         integral_1 = torch.trapz(integrand_1, y2_int, dim=1).reshape(timesteps, 1)
         frechet_grad_1 = frechet_grad_1 + integral_1
         integrand_2 = 2*(x2_exp-x1)*f_X(x0)*f_W(y2_exp-x1)
-        frechet_grad_2 = torch.trapz(integrand_2, y2_int, dim=1).reshape(timesteps, 1)
+        frechet_grad_2 = torch.trapz(integrand_2, x0, dim=0).reshape(timesteps, 1)
 
         # print("integrand_1.shape:", integrand_1.shape)
         # print("frechet_grad_1.shape:", frechet_grad_1.shape)
