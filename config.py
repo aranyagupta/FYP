@@ -9,7 +9,7 @@ configs = [
     {
         "kvals":[0.2, 0.1, 0.3, 0.4, 0.5],
         "sigvals":[5.0],
-        "kanHyps":[[1,25,1]],
+        "kanHyps":[[1,20,1]],
         "kanType":kan.KAN,
         "env":WitsEnv.WitsEnvMomentum,
         "trainer":WitsPPO.WitsMomentum,
