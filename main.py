@@ -62,11 +62,11 @@ if __name__ == "__main__":
         create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title=f"{modelType} {[x[0] for x in hyps]} Model Costs")
 
     if DISPLAY_SYMBOLIC:
-        hyps = [[1,0],[12,0],[1,0]]
+        hyps = [[1,0],[20,0],[1,0]]
 
         # LINEAR (UNINTENTIONAL - SHOULD BE 3-STEP)
-        k = "1.00"
-        sigma = "6.71"
+        k = "0.20"
+        sigma = "5.00"
 
         # 3 STEP: TBF
         # k = 0.22
@@ -76,9 +76,9 @@ if __name__ == "__main__":
         # k = 0.39
         # sigma = 3.87
 
-        modelType = 'FGD'
+        modelType = 'MOML'
         
-        name = f"verif_models/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
+        name = f"momentum_models/{modelType}-k-{k}-sigma-{sigma}-hyps-{hyps}-"
         actor_c1 = kan.KAN.loadckpt(name+"c1")
         actor_c2 = kan.KAN.loadckpt(name+"c2")
         act_fun_c1 = actor_c1.act_fun
