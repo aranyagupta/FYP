@@ -96,7 +96,7 @@ class TrainingFramework:
                     if type(alg) == WitsPPO.WitsLSA:
                         alg.train(5000,1)
                     elif type(alg) == WitsPPO.WitsMomentum:
-                        alg.train(10000,2000)
+                        alg.train(10000,1000)
                     else:
                         alg.train(100000, 1000)
                     
