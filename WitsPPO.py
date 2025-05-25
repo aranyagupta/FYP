@@ -212,16 +212,21 @@ class WitsMomentum(WitsTrainer):
 			raise Exception("Changed timesteps in between training - not allowed!")
 		
 		for batch in range(batches):
-			if batch % 50 == 0 and self.env.k == 0.20 and self.env.sigma == 5.00:
+			if batch < 100:
+				if batch % 10 == 0 and self.env.k == 0.20 and self.env.sigma == 5.00:
+					with torch.no_grad():
+						domain = torch.linspace(-15.0, 15.0, 1000, device=self.env.device).reshape(1000, 1)
+						m1_out = self.actor_c1(domain)
+						m2_out = self.actor_c2(domain)
+						torch.save(m1_out, f"batch-{batch}-m1.pt")
+						torch.save(m2_out, f"batch-{batch}-m2.pt")
+			elif batch % 50 == 0 and self.env.k == 0.20 and self.env.sigma == 5.00:
 				with torch.no_grad():
-					domain = torch.linspace(-15.0, 15.0, 1000, device=self.env.device).reshape(1000, 1)
-					m1_out = self.actor_c1(domain)
-					m2_out = self.actor_c2(domain)
-					torch.save(m1_out, f"batch-{batch}-m1.pt")
-					torch.save(m2_out, f"batch-{batch}-m2.pt")
-					print(f"batch:, {batch}")
-					print(f"m1_out: {m1_out}")
-					print(f"m2_out: {m2_out}")
+						domain = torch.linspace(-15.0, 15.0, 1000, device=self.env.device).reshape(1000, 1)
+						m1_out = self.actor_c1(domain)
+						m2_out = self.actor_c2(domain)
+						torch.save(m1_out, f"batch-{batch}-m1.pt")
+						torch.save(m2_out, f"batch-{batch}-m2.pt")
 			
 			gradient_1, gradient_2, out_1, out_2, J = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps=timesteps, zeta_1=self.zeta_1, zeta_2=self.zeta_2)
 			
