@@ -90,6 +90,10 @@ class TrainingFramework:
                     if prefit_func_2 is not None:
                         actor_c2 = prefit_model_2.copy()
 
+                    with torch.no_grad():
+                        domain = torch.linspace(-15.0, 15.0, 1000, device=testEnv.device).reshape(1000, 1)
+                        m1_out = actor_c1(domain)
+                        print("tf m1_out:", m1_out.reshape(1000,))
                     trainEnv = env(k, sigma, device=self.device, mode='TRAIN')
                     alg = trainer(trainEnv, actor_c1, actor_c2, lr)
                     
