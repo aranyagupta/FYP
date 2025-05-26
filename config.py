@@ -14,8 +14,8 @@ configs = [
         "env":WitsEnv.WitsEnvMomentum,
         "trainer":WitsPPO.WitsMomentum,
         "modelType":"MOML",
-        "prefit_func_1": lambda x : x+1.5,
-        "prefit_func_2": lambda x : x+1.5,
+        "prefit_func_1": lambda x : x,
+        "prefit_func_2": lambda x : x,
         "lr":0.01,
     },
     # {
