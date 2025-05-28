@@ -107,7 +107,6 @@ class TrainingFramework:
                     while (loss < best_loss):
                         self._store_actors(modelType, actor_c1, actor_c2, k, sigma, kan_hyp)
                         self._store_loss(modelType, loss, k, sigma, kan_hyp)
-                        break
                         if type(alg) == WitsPPO.WitsLSA:
                             alg.train(5000,1)
                         
