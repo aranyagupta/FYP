@@ -67,7 +67,7 @@ class TrainingFramework:
     def train_framework(self, kanType, env, trainer, modelType, prefit_func_1=None, prefit_func_2=None, lr=0.01):
         for kan_hyp in self.KAN_hyps:
             for sigma in self.sigma_range:
-                grid_range = [-3*sigma, 3*sigma]
+                grid_range = [-6*sigma, 6*sigma]
                 grid = min(int(3*sigma+1), 11)
                 prefit_model_1 = kanType(width=kan_hyp, grid=grid, k=3, seed=42, grid_range=grid_range, device=self.device)
                 prefit_model_2 = kanType(width=kan_hyp, grid=grid, k=3, seed=42, grid_range=grid_range, device=self.device)
