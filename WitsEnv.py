@@ -445,7 +445,6 @@ class WitsEnvMomentum(WitsEnvSuper):
         # calculates mu_1(x0)
         x1 = actor_c1(x0)
 
-
         # noise_int = torch.linspace(-3.0, 3.0, steps=timesteps, device=self.device)
         # noise = noise_int.reshape((timesteps, 1))
         # noise_exp = noise.expand((timesteps, timesteps)).T
