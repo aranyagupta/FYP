@@ -496,8 +496,8 @@ class WitsEnvMomentum(WitsEnvSuper):
         # print("integrand_2.shape:", integrand_2.shape)
         # print("frechet_grad_2.shape:", frechet_grad_2.shape)
 
-        self.zeta_1 = self.beta*self.zeta_1 + (1-self.beta)*frechet_grad_1
-        self.zeta_2 = self.beta*self.zeta_2 + (1-self.beta)*frechet_grad_2
+        self.zeta_1 = self.beta*self.zeta_1.detach() + (1-self.beta)*frechet_grad_1.detach()
+        self.zeta_2 = self.beta*self.zeta_2.detach() + (1-self.beta)*frechet_grad_2.detach()
 
         J = 0
         with torch.no_grad():
