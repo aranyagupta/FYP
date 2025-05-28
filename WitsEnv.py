@@ -421,8 +421,10 @@ class WitsEnvMomentum(WitsEnvSuper):
         TEST_TIMESTEPS = 100000
         self.x_0 = torch.normal(0, self.sigma, (TEST_TIMESTEPS,1), device=self.device)
         self.noise = torch.normal(0, 1, (TEST_TIMESTEPS, 1), device=self.device)
+        self.zeta_1 = torch.zeros((1,1))
+        self.zeta_2 = torch.zeros((1,1))
     
-    def step_timesteps(self, actor_c1, actor_c2, timesteps=2000, zeta_1 = torch.zeros((1,1)), zeta_2=torch.zeros((1,1))):
+    def step_timesteps(self, actor_c1, actor_c2, timesteps=2000):
         if self.mode == 'TEST':
             with torch.no_grad():
                 x1 = actor_c1(self.x_0)
@@ -431,7 +433,13 @@ class WitsEnvMomentum(WitsEnvSuper):
 
                 reward = self.k**2 * (x1 - self.x_0) ** 2 + (x2-x1)**2
                 return reward.mean()
-
+        
+        if self.zeta_1.shape == torch.Size([1, 1]):
+            self.zeta_1.expand((timesteps, 1))
+            self.zeta_2.expand((timesteps, 1))
+        elif self.zeta_1.shape != torch.Size([timesteps, 1]):
+            raise Exception("Changed timesteps in between training - not allowed!")
+        
         f_X = lambda x : 1.0/(self.sigma* torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-x**2/(2*self.sigma**2))
         f_W = lambda w : 1.0/(torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-w**2/(2))
         # wrap to allow jacobian vector product to work        
@@ -488,8 +496,8 @@ class WitsEnvMomentum(WitsEnvSuper):
         # print("integrand_2.shape:", integrand_2.shape)
         # print("frechet_grad_2.shape:", frechet_grad_2.shape)
 
-        zeta_1 = self.beta*zeta_1 + (1-self.beta)*frechet_grad_1
-        zeta_2 = self.beta*zeta_2 + (1-self.beta)*frechet_grad_2
+        self.zeta_1 = self.beta*self.zeta_1 + (1-self.beta)*frechet_grad_1
+        self.zeta_2 = self.beta*self.zeta_2 + (1-self.beta)*frechet_grad_2
 
         J = 0
         with torch.no_grad():
@@ -503,7 +511,7 @@ class WitsEnvMomentum(WitsEnvSuper):
 
             J = J1 + J2
 
-        return zeta_1, zeta_2, x1, x2, J 
+        return self.zeta_1, self.zeta_2, x1, x2, J 
     
 # ----------------- Simplified Environments ----------------- #
 class WitsEnvSimple():
