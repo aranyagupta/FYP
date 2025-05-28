@@ -235,7 +235,7 @@ class WitsMomentum(WitsTrainer):
 			# 			torch.save(m1_out, f"batch-{batch}-m1.pt")
 			# 			torch.save(m2_out, f"batch-{batch}-m2.pt")
 			gradient_1, gradient_2, out_1, out_2, J = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps=timesteps, zeta_1=self.zeta_1, zeta_2=self.zeta_2)
-			print(torch.all(self.zeta_1 == gradient_1), torch.all(self.zeta_2 == gradient_2))
+			print(torch.all(torch.abs(self.zeta_1 - gradient_1) < 1e-5), torch.all(torch.abs(self.zeta_2 - gradient_2) < 1e-5))
 			# self.zeta_1 = gradient_1 # for explicitness, should be modified in-place anyways
 			# self.zeta_2 = gradient_2 # for explicitness, should be modified in-place anyways
 
