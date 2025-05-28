@@ -242,8 +242,8 @@ class WitsMomentum(WitsTrainer):
 			self.actor_c1_optim.zero_grad()
 			self.actor_c2_optim.zero_grad()
 
-			out_1.backward(gradient=self.tau*gradient_1, retain_graph=True)
-			out_2.backward(gradient=self.tau*gradient_2, retain_graph=True)
+			out_1.backward(gradient=self.tau*gradient_1, retain_graph=False)
+			out_2.backward(gradient=self.tau*gradient_2, retain_graph=False)
 
 			self.actor_c2_optim.step()
 			self.actor_c1_optim.step()
