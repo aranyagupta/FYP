@@ -460,7 +460,7 @@ class WitsEnvMomentum(WitsEnvSuper):
         # y2_calc = y2.reshape(timesteps*timesteps, 1)
         # ones = torch.ones_like(y2_calc, device=self.device)
 
-        y2_int = torch.linspace(-4*self.sigma, 4*self.sigma, steps=timesteps, device=self.device)
+        y2_int = torch.linspace(-3*self.sigma, 3*self.sigma, steps=timesteps, device=self.device)
         y2 = y2_int.reshape((timesteps, 1))
         y2_exp = y2.expand((timesteps, timesteps)).T
         ones = torch.ones_like(y2, device=self.device)
