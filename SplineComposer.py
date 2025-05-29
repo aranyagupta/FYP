@@ -4,6 +4,7 @@ import sympy as sp
 import numpy as np
 import matplotlib.pyplot as plt
 from sympy.utilities.lambdify import lambdify
+import time
 
 def symbolic_b_splines_sum(coef, k, knots):
     """
@@ -64,10 +65,19 @@ def symbolic_b_splines_sum(coef, k, knots):
             return s
 
     # Construct the symbolic sum of B-splines weighted by coefficients
-    spline_sum = sum(coef[i] * b_spline_basis(i, p, t, knots) for i in range(num_b_splines))
+    # spline_sum = sum(coef[i] * b_spline_basis(i, p, t, knots) for i in range(num_b_splines)) # SLOW - DO NOT USE
+
+    
+    spline_sum = 0
+    for i in range(num_b_splines):
+        start = time.time()
+        spline_sum = spline_sum + coef[i] * b_spline_basis(i, p, t, knots)
+        if i != 0:
+            spline_sum = sp.simplify(spline_sum)
+        print(f"finished simplifing B-spline sum up to i={i}, took {time.time()-start}s")
 
     # return sp.simplify(spline_sum)
-    return sp.simplify(spline_sum)
+    return spline_sum
 
 
 # Composes kan layers found in actor.act_fun into one symbolic function
@@ -90,8 +100,10 @@ def compose_kanlayers(act_fun):
                 print("here 3")
                 func = layer.scale_sp[i, j]*func + layer.scale_base[i, j] * t/(1+sp.exp(-t))
                 print("here 4")
+                start = time.time()
                 out_funcs[j] += func.subs({"t":initial_funcs[i]})
-                print("here 5")
+                print(f"finished substitution, took {time.time()-start}s")
+                initial_funcs[i] = 0 # save memory
                 # out_funcs[j] = sp.simplify(out_funcs[j])
         initial_funcs = out_funcs
     assert len(initial_funcs) == 1, "initial_funcs does not have length 1, something went wrong"
