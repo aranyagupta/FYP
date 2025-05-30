@@ -8,7 +8,7 @@ def get_loss_from_file(filename, models_loss_dir="./wits_models_loss_storage/"):
     loss_text = float(loss_text[11:])
     return loss_text
 
-def getLosses(dgd=True, dgdcomb=False, ppo=False, lag=False, lsa=False, fgd=False, hyps=[[1,0],[2,0],[2,0],[1,0]], models_loss_dir="./wits_models_loss_storage/"):
+def getLosses(dgd=True, dgdcomb=False, ppo=False, lag=False, lsa=False, fgd=False, moml=False, hyps=[[1,0],[2,0],[2,0],[1,0]], models_loss_dir="./wits_models_loss_storage/"):
     files = os.listdir(models_loss_dir)
     if not dgdcomb:
         files = [x for x in files if x[:7]!="DGDCOMB"]
@@ -22,6 +22,8 @@ def getLosses(dgd=True, dgdcomb=False, ppo=False, lag=False, lsa=False, fgd=Fals
         files = [x for x in files if x[:3]!="LSA"]
     if not fgd:
         files = [x for x in files if x[:3]!="FGD"]
+    if not moml:
+        files = [x for x in files if x[:4]!="MOML"]
 
     files = [file for file in files if str(hyps) in file]
 

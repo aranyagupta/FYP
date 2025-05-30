@@ -67,7 +67,6 @@ def symbolic_b_splines_sum(coef, k, knots):
     # Construct the symbolic sum of B-splines weighted by coefficients
     # spline_sum = sum(coef[i] * b_spline_basis(i, p, t, knots) for i in range(num_b_splines)) # SLOW - DO NOT USE
 
-    
     spline_sum = 0
     for i in range(num_b_splines):
         start = time.time()
@@ -84,8 +83,9 @@ def symbolic_b_splines_sum(coef, k, knots):
 def compose_kanlayers(act_fun):
     t = sp.symbols('t')
     initial_funcs = [t]
-    for layer in act_fun:
-        print("ON LAYER:", layer)
+    for layer_i in range(len(act_fun)):
+        print("ON LAYER:", layer_i)
+        layer = act_fun[layer_i]
         order = layer.k
         out_funcs = [0 for _ in range(layer.out_dim)]
         for j in range(layer.out_dim):
@@ -103,8 +103,7 @@ def compose_kanlayers(act_fun):
                 start = time.time()
                 out_funcs[j] += func.subs({"t":initial_funcs[i]})
                 print(f"finished substitution, took {time.time()-start}s")
-                initial_funcs[i] = 0 # save memory
-                # out_funcs[j] = sp.simplify(out_funcs[j])
+
         initial_funcs = out_funcs
     assert len(initial_funcs) == 1, "initial_funcs does not have length 1, something went wrong"
     return initial_funcs[0]
