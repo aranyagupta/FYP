@@ -8,8 +8,8 @@ Training configurations
 configs = [
     {
         "kvals":[1.00],
-        "sigvals":[5.00],
-        "kanHyps":[[1,20,1]],
+        "sigvals":[2.24, 3.16, 3.87, 4.47, 5.00, 5.48, 5.92, 6.32, 6.71],
+        "kanHyps":[[1,12,1]],
         "kanType":kan.KAN,
         "env":WitsEnv.WitsEnvMomentum,
         "trainer":WitsPPO.WitsMomentum,
