@@ -7,15 +7,15 @@ Training configurations
 """
 configs = [
     {
-        "kvals":[0.22, 0.32, 0.39, 0.45, 0.5, 0.55],
-        "sigvals":[2.2361, 3.1623, 3.8730, 4.4721, 5.0000, 5.4772, 5.9161, 6.3246],
+        "kvals":[1.00],
+        "sigvals":[5.00],
         "kanHyps":[[1,20,1]],
         "kanType":kan.KAN,
         "env":WitsEnv.WitsEnvMomentum,
         "trainer":WitsPPO.WitsMomentum,
         "modelType":"MOML",
-        "prefit_func_1": lambda x : x,
-        "prefit_func_2": lambda x : x,
+        "prefit_func_1": None,
+        "prefit_func_2": None,
         "lr":0.01,
     },
     # {

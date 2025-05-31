@@ -47,8 +47,8 @@ if __name__ == "__main__":
     #     f.train_framework(kanType, env, gradDesc, modelType)
 
     if DISPLAY_HEATMAP:
-        hyps =  [[1,0],[12,0],[1,0]]
-        kvals, sigvals, losses = getLosses(dgd=False, dgdcomb=False, ppo=False, lag=False, lsa=False, fgd=True, hyps=hyps, models_loss_dir="./FGD_loss/")
+        hyps =  [[1,0],[20,0],[1,0]]
+        kvals, sigvals, losses = getLosses(dgd=False, dgdcomb=False, ppo=False, lag=False, lsa=False, fgd=False, moml=True, hyps=hyps, models_loss_dir="./momentum_loss/")
 
         kvals_squared = [round(k**2/0.05)*0.05 for k in kvals]
         varvals = [round(s**2/5.0)*5.0 for s in sigvals]
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         # lookup = generateLookupTable(kvals, sigvals, losses)
         # print(lookup[(0.3, 4.6)])
 
-        modelType = 'FGD'
+        modelType = 'MOML'
 
         create_heatmap(kvals_squared, varvals, losses, cmap='plasma', title=f"{modelType} {[x[0] for x in hyps]} Model Costs")
 
@@ -65,8 +65,8 @@ if __name__ == "__main__":
         hyps = [[1,0],[20,0],[1,0]]
 
         # LINEAR (UNINTENTIONAL - SHOULD BE 3-STEP)
-        k = "0.20"
-        sigma = "5.00"
+        k = "0.55"
+        sigma = "6.32"
 
         # 3 STEP: TBF
         # k = 0.22
