@@ -67,6 +67,7 @@ def r2_dir(path):
             r2_c2, m2, b2 = calculate_r2(c2, device, (-3*sigvals[i], 3*sigvals[i]))
             print(f"{core_names[i]}-c1 R^2 value: {r2_c1}, m: {m1}, b: {b1}")
             print(f"{core_names[i]}-c2 R^2 value: {r2_c2}, m: {m2}, b: {b2}")
+            seen_before[core_names[i]] = 1
 
 # given a path and an environment type, find and test all KAN models in that environment 
 def test_dir(path, env):
