@@ -15,7 +15,7 @@ Repository written and maintained by Aranya Gupta.
 - Create necessary directories for training with `mkdir wits_models wits_models_loss`
 
 ### Configuration
-In `config.py`, set up a configuration for the types of training you want to do. We show below the format for the dictionary for each Training session.
+In `config.py`, set up a configuration for the types of training you want to do. We show below the format for the dictionary for each Training session. Once set up, run `python main.py train` to run a training session. 
 
 |      Key      | Allowed Types |                        Example Value                        |                                                                                                                             Explanation                                                                                                                             |
 |:-------------:|:-------------:|:-----------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
