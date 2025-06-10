@@ -315,12 +315,6 @@ class WitsEnvLSA(WitsEnvSuper):
                 reward = self.k**2 * (self.x_0 - x_1)**2 + (u_1 - x_1)**2
                 return reward.mean()
             
-        # x_0 = torch.normal(0, self.sigma, (timesteps,1), device=self.device)
-        # x_1 = actor_c1(x_0)
-        # w = torch.normal(0, 1, (timesteps,self.dims), device=self.device)
-        # y_2 = x_1 + w
-        # x_2 = self.generate_u1_tensor(y_2, x_1)
-
         x_0 = torch.linspace(-3*self.sigma, 3*self.sigma, timesteps)
         x_0 = x_0.reshape(x_0.shape[0], 1)
         x_1 = actor_c1(x_0)
@@ -353,23 +347,6 @@ class WitsEnvLSA(WitsEnvSuper):
         integral = integral.reshape(integral.shape[0], 1)
         dJ_dx1 = dJ_dx1 + integral
 
-        ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
-        # dJ_dx1_check = 2*self.k**2*(x_1-x_0)*f_X(x_0)
-        # # print("initial dJ_dx1 has nan:", torch.any(torch.isnan(dJ_dx1)))
-        # for i in range(x_0.shape[0]):
-        #     current_x_0 = x_0[i]
-        #     current_x_1 = x_1[i]
-
-        #     # integrand at a fixed (float) value of x_0
-        #     integrand = (2*(current_x_1-x_2) + (y_1-current_x_1) * (current_x_1-x_2)**2)*f_X(current_x_0)*f_W(y_1-current_x_1)
-        #     # computing integral over all y_1
-        #     integral = torch.trapz(y=integrand[indices].reshape(integrand.shape[0], 1), x=y_1_integrating, dim=0)
-        #     dJ_dx1_check[i] = dJ_dx1_check[i] + integral
-        # print("dJ_dx1:", dJ_dx1)
-        # print("dJ_dx1_check:", dJ_dx1_check)
-        # assert torch.any(torch.abs(dJ_dx1_check - dJ_dx1)<=1e-4), f"dJ_dx1 is not accurate:\n value={dJ_dx1},\n check={dJ_dx1_check}"
-        ############################################################################
-
         # Partial derivative of dJ_dx1 wrt x_1, taken from paper
         dx1_dJ_dx1 = 2*(self.k**2-1)*f_X(x_0)
         integrand = ((y_2-x_1_exp)*(x_1_exp-x_2+2)**2 - (x_1_exp-x_2))**2 * f_X(x_0_exp)*f_W(y_2-x_1_exp)
@@ -378,18 +355,6 @@ class WitsEnvLSA(WitsEnvSuper):
         integral = integral.reshape(integral.shape[0], 1)
         dx1_dJ_dx1 = dx1_dJ_dx1 + integral
 
-         ################ FOR LOOP IMPLEMENTATION - SLOW ###########################
-        # dx1_dJ_dx1_check = 2*(self.k**2-1)*f_X(x_0)
-        # for i in range(x_0.shape[0]):
-        #     current_x_0 = x_0[i]
-        #     current_x_1 = x_1[i]
-        #     integrand = ((y_1-current_x_1)*(current_x_1-x_2+2)**2 - (current_x_1-x_2))**2 * f_X(current_x_0)*f_W(y_1-current_x_1)
-        #     integral = torch.trapz(y=integrand[indices].reshape(integrand.shape[0], 1), x=y_1_integrating, dim=0)
-        #     dx1_dJ_dx1_check[i] = dx1_dJ_dx1_check[i] + integral
-        # print("dx1_dJ_dx1:", dx1_dJ_dx1)
-        # print("dx1_dJ_dx1_check:", dx1_dJ_dx1_check)
-        # assert torch.any(torch.abs(dx1_dJ_dx1_check - dx1_dJ_dx1)<=1e-4), f"dx1_dJ_dx1 is not accurate:\n value:{dx1_dJ_dx1},\n check:{dx1_dJ_dx1_check}"
-        ############################################################################
         return dJ_dx1, dx1_dJ_dx1, x_1, x_0
    
 
@@ -441,8 +406,6 @@ class WitsEnvFGD(WitsEnvSuper):
 
 
         x0 = torch.normal(0, self.sigma, (timesteps, 1), device=self.device)
-        # x0 = torch.linspace(-3*self.sigma, 3*self.sigma, timesteps)
-        # x0 = x0.reshape((x0.shape[0], 1))
 
         ones = torch.ones_like(x0, device=self.device)
         # calculates mu_1(x0) and dmu_1(y)/dy at y = x0
@@ -458,8 +421,6 @@ class WitsEnvFGD(WitsEnvSuper):
             print("dmu_1_dy has inf")
 
         noise = torch.normal(0, 1, (timesteps, 1), device=self.device)
-        # noise = torch.linspace(-3.0, 3.0, timesteps)
-        # noise = noise.reshape((noise.shape[0], 1))
         y2 = x1 + noise
 
 
@@ -484,9 +445,7 @@ class WitsEnvFGD(WitsEnvSuper):
             print("dmu_2_dx has inf")
         
         frechet_grad_1 = 2*self.k**2*(x1-x0) + 2*(x1-x2)*(1-dmu_2_dy)
-        # frechet_grad_1 = frechet_grad_1*f_X(x0)
         frechet_grad_2 = -2*(x1 - x2)
-        # frechet_grad_2 = frechet_grad_2*f_X(x0)*f_W(noise)
 
         if torch.any(torch.isnan(frechet_grad_2)):
             print("frechet_grad_2 has nan")
@@ -564,12 +523,6 @@ class WitsEnvMomentum(WitsEnvSuper):
         # calculates mu_1(x0)
         x1 = actor_c1(x0)
 
-        # noise_int = torch.linspace(-3.0, 3.0, steps=timesteps, device=self.device)
-        # noise = noise_int.reshape((timesteps, 1))
-        # noise_exp = noise.expand((timesteps, timesteps)).T
-        # y2 = x1 + noise_exp
-        # y2_calc = y2.reshape(timesteps*timesteps, 1)
-        # ones = torch.ones_like(y2_calc, device=self.device)
 
         y2_int = torch.linspace(-3*self.sigma, 3*self.sigma, steps=timesteps, device=self.device)
         y2 = y2_int.reshape((timesteps, 1))
@@ -591,9 +544,6 @@ class WitsEnvMomentum(WitsEnvSuper):
         if torch.any(torch.isinf(dmu_2_dy)):
             print("dmu_2_dy has inf")
 
-        # print("x0.shape:", x0.shape)
-        # print("x1.shape:", x1.shape)
-        # print("x2.shape:", x2.shape)
         
         frechet_grad_1 = 2*self.k**2*(x1-x0)*f_X(x0)
         integrand_1 = 2*f_X(x0)*(x2_exp-x1)*(dmu_2_dy_exp-1)*f_W(y2_exp-x1)
@@ -601,11 +551,6 @@ class WitsEnvMomentum(WitsEnvSuper):
         frechet_grad_1 = frechet_grad_1 + integral_1
         integrand_2 = 2*(x2_exp-x1)*f_X(x0)*f_W(y2_exp-x1)
         frechet_grad_2 = torch.trapz(integrand_2, x0, dim=0).reshape(timesteps, 1)
-
-        # print("integrand_1.shape:", integrand_1.shape)
-        # print("frechet_grad_1.shape:", frechet_grad_1.shape)
-        # print("integrand_2.shape:", integrand_2.shape)
-        # print("frechet_grad_2.shape:", frechet_grad_2.shape)
 
         self.zeta_1 = self.beta*self.zeta_1.detach() + (1-self.beta)*frechet_grad_1.detach()
         self.zeta_2 = self.beta*self.zeta_2.detach() + (1-self.beta)*frechet_grad_2.detach()
