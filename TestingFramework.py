@@ -20,7 +20,7 @@ def extract_info(file):
         sigma = -1
     return file[:i], abs(k), abs(sigma)
             
-
+# calculates R^2 values for linear fit given an actor
 def calculate_r2(actor, device, range=(-15.0, 15.0)):
     num_points = 1000
     x_values = torch.linspace(range[0], range[1], num_points).to(device)
@@ -40,6 +40,7 @@ def calculate_r2(actor, device, range=(-15.0, 15.0)):
 
     return rs, m, b
 
+# calculates R^2 values for linear fit for a whole directory
 def r2_dir(path):
     print(f"Running R^2 calculations on dir {path}...")
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

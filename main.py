@@ -33,18 +33,6 @@ if __name__ == "__main__":
             f = TestingFramework.test_dir(c["path"], c["env"])
     else:
         pass
-    # if TRAIN_DGDCOMB:
-    #     kanType = CombinedKan.CombinedKan
-    #     env = WitsEnv.WitsEnvCombined
-    #     gradDesc = WitsPPO.WitsGradDescCombined
-    #     modelType = 'DGDCOMB'
-    #     f.train_framework(kanType, env, gradDesc, modelType)
-    # if TRAIN_ALTERNATING:
-    #     kanType = kan.KAN
-    #     env = WitsEnv.WitsEnv
-    #     gradDesc = WitsPPO.WitsAlternatingDescent
-    #     modelType = "ALTERNATING"
-    #     f.train_framework(kanType, env, gradDesc, modelType)
 
     if DISPLAY_HEATMAP:
         hyps =  [[1,0],[20,0],[1,0]]
@@ -65,8 +53,8 @@ if __name__ == "__main__":
         hyps = [[1,0],[20,0],[1,0]]
 
         # LINEAR (UNINTENTIONAL - SHOULD BE 3-STEP)
-        k = "0.55"
-        sigma = "6.32"
+        k = "0.32"
+        sigma = "3.16"
 
         # 3 STEP: TBF
         # k = 0.22
@@ -90,8 +78,8 @@ if __name__ == "__main__":
             # actor_c2.plot()
             # plt.show()
         
-            plot_model_bruteforce(actor_c1, device=device, range=(-15.0, 15.0), title=f"Reconstruction: C1, hyps={[x[0] for x in hyps]}, k={k}, sig={sigma}, {modelType}")
-            plot_model_bruteforce(actor_c2, device=device, range=(-15.0, 15.0), title=f"Reconstruction: C2, hyps={[x[0] for x in hyps]}, k={k}, sig={sigma}, {modelType}")
+            plot_model_bruteforce(actor_c1, device=device, range=(-15.0, 15.0), title=f"C1, hyps={[x[0] for x in hyps]}, k={k}, sig={sigma}, {modelType}")
+            plot_model_bruteforce(actor_c2, device=device, range=(-15.0, 15.0), title=f"C2, hyps={[x[0] for x in hyps]}, k={k}, sig={sigma}, {modelType}")
 
 
         # individual_functions_c1 = individual_kanlayers(act_fun_c1)

@@ -27,9 +27,23 @@ class WitsTrainer:
 
 class WitsGradDesc(WitsTrainer):
 	def __init__(self, env, actor_c1, actor_c2, lr=0.01):
+		'''
+		Unconstrained Optimisation Trainer
+		Args:
+			env (WitsEnv): Witsenhausen environment
+			actor_c1 (kan.KAN): KAN model representing controller 1 
+			actor_c2 (kan.KAN): KAN model representing controller 2
+			lr (float): learning rate for optimiser
+		'''
 		super().__init__(env, actor_c1, actor_c2, lr)
 
 	def train(self, timesteps, batches):
+		'''
+		Perform backprop for model
+		Args:
+			timesteps (int): Number of timesteps per batch
+			batch (int): number of batches
+		'''
 		start = time.time()
 		for batch in range(batches):
 			# print("batch:", batch)
@@ -44,9 +58,20 @@ class WitsGradDesc(WitsTrainer):
 			self.actor_c2_optim.step()
 			self.actor_c1_optim.step()
 		print("TOOK", time.time()-start, "seconds to finish.")
-			
+
+'''
+Constrained Optimisation Trainer
+'''
 class WitsGradDescConstrained(WitsTrainer):
 	def __init__(self, env, actor_c1, actor_c2, lr=0.01):
+		'''
+		Constrained Optimisation Trainer
+		Args:
+			env (WitsEnv): Witsenhausen environment
+			actor_c1 (kan.KAN): KAN model representing controller 1 
+			actor_c2 (kan.KAN): KAN model representing controller 2
+			lr (float): learning rate for optimiser
+		'''
 		super().__init__(env, actor_c1, actor_c2, lr)
 
 		self.lamb_0 = torch.tensor(1.0, requires_grad=True, device = actor_c1.device)
@@ -60,6 +85,12 @@ class WitsGradDescConstrained(WitsTrainer):
 		self.lamb_1_optim = Adam([self.lamb_1], lr=self.lr, maximize=True)
 
 	def train(self, timesteps, batches):
+		'''
+		Perform backprop for model
+		Args:
+			timesteps (int): Number of timesteps per batch
+			batch (int): number of batches
+		'''
 		start = time.time()
 		for batch in range(batches):
 			# print("batch:", batch)
@@ -94,6 +125,10 @@ class WitsGradDescConstrained(WitsTrainer):
 			self.actor_c1_optim.step()
 		print("TOOK", time.time()-start, "seconds to finish.")
 
+'''
+"Combined" Gradient Descent Trainer (Combined Actor)
+Deprecated, do not use
+'''
 class WitsGradDescCombined(WitsTrainer):
 	def __init__(self, env, actor_combined, actor_combined2=None, lr=0.01):
 		super().__init__(env, actor_combined, actor_combined2, lr)
@@ -109,7 +144,10 @@ class WitsGradDescCombined(WitsTrainer):
 			self.actor_c1_optim.zero_grad()
 			actor_loss.backward()
 			self.actor_c1_optim.step()
-
+'''
+"Alternating" Gradient Descent Trainer (coordinate direction update)
+Deprecated, do not use
+'''
 class WitsAlternatingDescent(WitsTrainer):
 	def __init__(self, env, actor_c1, actor_c2, lr=0.01):
 		super().__init__(env, actor_c1, actor_c2, lr)
@@ -134,10 +172,24 @@ class WitsAlternatingDescent(WitsTrainer):
 				self.actor_c1_optim.step()
 				print("ALTERNATING LOSS:", actor_loss)
 
-# Local Search Algorithm as described in this paper:
-# https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8264401	
+'''
+Local Search Algorithm Trainer as described in this paper:
+https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8264401
+batches and actor_c2 are irrelevant when training
+Defaulted to None/0 respectively
+'''
 class WitsLSA(WitsTrainer):
 	def __init__(self, env, actor_c1, actor_c2=None, lr=0.01, N=15, p=1e-3):
+		'''
+		Constrained Optimisation Trainer
+		Args:
+			env (WitsEnv): Witsenhausen environment
+			actor_c1 (kan.KAN): KAN model representing controller 1 
+			actor_c2 (kan.KAN): KAN model representing controller 2. Not used for LSA
+			lr (float): learning rate for optimiser
+			N (int): number of update repetitions before stop condition is checked
+			p (float): stop condition precision
+		'''
 		super().__init__(env, actor_c1, actor_c2, lr)
 
 		self.N = N # num repetitions
@@ -147,20 +199,18 @@ class WitsLSA(WitsTrainer):
 		self.scheduler = torch.optim.lr_scheduler.StepLR(self.actor_c1_optim, step_size=90, gamma=0.9)
 		
 	def train(self, timesteps, batches=0):
+		'''
+		Perform backprop for model
+		Args:
+			timesteps (int): Number of timesteps per batch
+			batch (int): number of batches. Not used for LSA as stop condition is built-in.
+		'''
 		while True:
 			for i in range(int(self.N)):
 				dJ_dx1, dx1_dJ_dx1, out, x_0 = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps)
 				gradients = dJ_dx1/torch.abs(dx1_dJ_dx1)
 				small_mask = torch.abs(dx1_dJ_dx1) <= 1e-6
 				gradients[small_mask] = self.tau * dJ_dx1[small_mask]
-				########## FOR LOOP IMPLEMENTATION - SLOW ####################
-				# for i in range(dx1_dJ_dx1.shape[0]):
-				# 	if torch.abs(dx1_dJ_dx1[i]) <= 1e-6:
-				# 		gradients[i] = self.tau * dJ_dx1[i] # positive as optimiser automatically handles gradient descent
-				# 		count+=1
-				########## FOR LOOP IMPLEMENTATION - SLOW ####################
-				
-				# print("gradients has nan:", torch.any(torch.isnan(gradients)))
 				self.actor_c1_optim.zero_grad()
 				out.backward(gradient=gradients, retain_graph=True)
 				self.actor_c1_optim.step()
@@ -173,13 +223,29 @@ class WitsLSA(WitsTrainer):
 				break
 			self.scheduler.step()
 
-# Frechet Gradient Descent (NOT Frechet Discrete Gradient) training wrapper
+'''
+Frechet Gradient Descent Trainer
+'''
 class WitsFGD(WitsTrainer):
 	def __init__(self, env, actor_c1, actor_c2, lr=0.01):
+		'''
+		Initialised Frechet Gradient Descent Trainer
+		Args:
+			env (WitsEnv): Witsenhausen environment
+			actor_c1 (kan.KAN): KAN model representing controller 1 
+			actor_c2 (kan.KAN): KAN model representing controller 2. Not used for LSA
+			lr (float): learning rate for optimiser
+		'''
 		super().__init__(env, actor_c1, actor_c2, lr)
 		self.tau = 1e-3 # tau as defined in paper, scaling factor for gradient
 
 	def train(self, timesteps, batches):
+		'''
+		Perform backprop for model
+		Args:
+			timesteps (int): Number of timesteps per batch
+			batch (int): number of batches.
+		'''
 		# print("batch:", batch)
 		for batch in range(batches):
 			gradient_1, gradient_2, out_1, out_2, J = self.env.step_timesteps(self.actor_c1, self.actor_c2, timesteps=timesteps)
@@ -195,16 +261,31 @@ class WitsFGD(WitsTrainer):
 
 			print("PERFORMANCE:", J)
 
-# FGD with momentum
+'''
+Polyak Momentum + Frechet Gradient Trainer
+'''
 class WitsMomentum(WitsTrainer):
 	def __init__(self, env, actor_c1, actor_c2, lr=0.01):
+		'''
+		Initialised Frechet Gradient Descent Trainer
+		Args:
+			env (WitsEnv): Witsenhausen environment
+			actor_c1 (kan.KAN): KAN model representing controller 1 
+			actor_c2 (kan.KAN): KAN model representing controller 2. Not used for LSA
+			lr (float): learning rate for optimiser
+		'''
 		super().__init__(env, actor_c1, actor_c2, lr)
 		self.tau = 1e-3 # tau as defined in paper, scaling factor for gradient
 
 	def train(self, timesteps, batches):
-		# print("batch:", batch)
-		
+		'''
+			Perform backprop for model
+			Args:
+				timesteps (int): Number of timesteps per batch
+				batch (int): number of batches.
+		'''
 		for batch in range(batches):
+			
 			# if batch < 50:
 			# 	with torch.no_grad():
 			# 		domain = torch.linspace(-15.0, 15.0, 1000, device=self.env.device).reshape(1000, 1)

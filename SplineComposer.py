@@ -10,7 +10,7 @@ def symbolic_b_splines_sum(coef, k, knots):
     """
     Generate a symbolic representation of the sum of B-splines of order k.
 
-    Parameters:
+    Args:
         coef (np.ndarray): Coefficients of the B-splines.
         k (int): Order of the B-splines.
 
@@ -79,8 +79,16 @@ def symbolic_b_splines_sum(coef, k, knots):
     return spline_sum
 
 
-# Composes kan layers found in actor.act_fun into one symbolic function
 def compose_kanlayers(act_fun):
+    """
+    Composes kan layers found in actor.act_fun into one symbolic function
+
+    Args:
+        act_fun (KANLayer list): list of activation functions, found in actor.act_fun
+
+    Returns:
+        sp.Expr: Symbolic representation of the entire model.
+    """
     t = sp.symbols('t')
     initial_funcs = [t]
     for layer_i in range(len(act_fun)):
@@ -112,6 +120,17 @@ def compose_kanlayers(act_fun):
 # if actor is given, plots individual kanlayer functions on same plot as actor
 # plots the same way it's done in kan.plot()
 def individual_kanlayers(act_fun, actor=None):
+    """
+    Returns individual kan layer subfunctions found in actor.act_fun
+    If actor itself is also given, plots overlay of computational subfunctions on top of symbolic expression
+
+    Args:
+        act_fun (KANLayer list): list of activation functions, found in actor.act_fun
+        actor (None | kan.KAN): KAN model
+
+    Returns:
+        sp.Expr list: Symbolic representation of individual subfunctions.
+    """
     t = sp.symbols('t')
     function_list = []
     for l in range(len(act_fun)):
@@ -148,9 +167,11 @@ def individual_kanlayers(act_fun, actor=None):
 
                     plt.plot(actor.acts[l][:, i][rank].cpu().detach().numpy(), actor.spline_postacts[l][:, j, i][rank].cpu().detach().numpy(), lw=5, label="Computational output")
                     plt.plot(t_values, y_values, label=f"Symbolic B-spline output")
-                    plt.xlabel("t", fontsize=12)
-                    plt.ylabel("f(t)", fontsize=12)
-                    plt.title("Symbolic and Computational comparison", fontsize=14)
+                    plt.xlabel("t", fontsize=24)
+                    plt.ylabel("f(t)", fontsize=24)
+                    plt.xticks(fontsize=48)
+                    plt.yticks(fontsize=48)
+                    plt.title("Symbolic and Computational comparison", fontsize=36)
                     plt.grid(True)
                     plt.legend(fontsize=12)
                     plt.show()
@@ -181,9 +202,11 @@ def plot_sympy_func(sympy_func, interval, num_points=1000):
     # Plot the function
     plt.figure(figsize=(10, 6))
     plt.plot(t_values, y_values, label=f"Sum of B-splines")
-    plt.xlabel("t", fontsize=12)
-    plt.ylabel("Value", fontsize=12)
-    plt.title("Plot of Sum of B-splines", fontsize=14)
+    plt.xticks(fontsize=48)
+    plt.yticks(fontsize=48)
+    plt.xlabel("t", fontsize=24)
+    plt.ylabel("Value", fontsize=24)
+    plt.title("Plot of Sum of B-splines", fontsize=36)
     plt.grid(True)
     plt.legend(fontsize=12)
     plt.show()
@@ -202,9 +225,11 @@ def plot_model_bruteforce(actor, device, range=(-15.0, 15.0), title="Reconstruct
 
     plt.figure(figsize=(10, 6))
     plt.plot(x_values_plot, y_values_plot, label=f"f(x)")
-    plt.xlabel("x", fontsize=12)
-    plt.ylabel("f(x)", fontsize=12)
-    plt.title(f"{title}", fontsize=14)
+    plt.xticks(fontsize=48)
+    plt.yticks(fontsize=48)
+    plt.xlabel("x", fontsize=20)
+    plt.ylabel("f(x)", fontsize=20)
+    plt.title(f"{title}", fontsize=36)
     plt.grid(True)
     plt.legend(fontsize=12)
     plt.show()

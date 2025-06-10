@@ -20,22 +20,33 @@ class WitsEnvSuper:
 
 # ----------------- Regular Environments ----------------- #
 ''' 
-    Generates a Witsenhausen environment 
-    Environment and system are used interchangeably here
+Unconstrained Optimisation Environment
 '''
 class WitsEnv(WitsEnvSuper):
-    '''
-        Initialises a Witsenhausen Counterexample environment
-        k: Witsenhausen cost parameter
-        sigma: standard dev of x_0
-        dims: dimension of environment (system state variables)
-    '''
     def __init__(self, k, sigma, device, mode='TRAIN'):
+        '''
+            Initialises an Unconstrained Optimisation environment
+            Args:
+                k (float): Witsenhausen cost parameter
+                sigma (float): standard dev of x
+                device (torch.device): torch GPU/CPU
+                mode (string): TRAIN/TEST
+        '''
         torch.set_default_dtype(torch.float32)
 
         super().__init__(k, sigma, device, mode=mode)
     
     def step_timesteps(self, actor_c1, actor_c2, timesteps):
+        '''
+            Uses MC estimation to produce the Witsenhausen Loss J
+            Args:
+                actor_c1 (kan.KAN): KAN model representing first controller
+                actor_c2 (kan.KAN): KAN model representing second controller
+                timesteps (int): number of timesteps to simulate
+            Returns:
+                reward: Witsenhausen cost J = E[k^2(f(x)-x)^2 + (g(f(x)+eta) - f(x))^2]. 
+                Not sure why I called it reward, since Trainer will try to minimise it.
+        '''
         if self.mode == 'TEST':
             with torch.no_grad():
                 u_1 = actor_c1(self.x_0)
@@ -57,12 +68,20 @@ class WitsEnv(WitsEnvSuper):
         return reward
 
 class WitsEnvConstrained(WitsEnvSuper):
-    '''
-        Initialises a Witsenhausen Counterexample environment with constrained loss
-        k: Witsenhausen cost parameter
-        sigma: standard dev of x_0
-    '''
     def __init__(self, k, sigma, device, mode='TRAIN', constrain_odd = False, constrain_nonlinear=False, constrain_nonaffine = False, constrain_new = True):
+        '''
+            Initialises a Witsenhausen Counterexample environment with Lagrangian augmented loss
+            Args:
+                k (float): Witsenhausen cost parameter
+                sigma (float): standard dev of x
+                device (torch.device): torch GPU/CPU
+                mode (string): TRAIN/TEST
+                constrain_odd (bool): use odd equality constraint mu(x) + mu(-x) = 0
+                constrain_nonlinear (bool): use nonlinearity inequality constraint epsilon - (mu(x) - x)^2 < 0
+                constrain_nonaffine (bool): use nonaffine inequality constraint epsilon - (mu(x) - (mx+c))^2 < 0
+                constrain_new (bool): use area constraint (see report for details)
+            
+        '''
         torch.set_default_dtype(torch.float32)
         super().__init__(k, sigma, device, mode=mode)
         
@@ -73,6 +92,20 @@ class WitsEnvConstrained(WitsEnvSuper):
         self.constrain_new = constrain_new
     
     def step_timesteps(self, actor_c1, actor_c2, lamb_0=0, lamb_1=0, mu_0=0, mu_1=0, timesteps=1000000, noise=True):
+        '''
+            Uses MC estimation to produce the Witsenhausen Loss J
+            Args:
+                actor_c1 (kan.KAN): KAN model representing first controller
+                actor_c2 (kan.KAN): KAN model representing second controller
+                lamb_0 (torch.Tensor): equality constraint coefficient for first controller
+                lamb_1 (torch.Tensor): equality constraint coefficient for second controller
+                mu_0 (torch.Tensor): inequality constraint coefficient for first controller
+                mu_1 (torch.Tensor): inequality constraint coefficient for second controller
+                timesteps (int): number of timesteps to simulate
+                noise (bool): whether or not to use additive noise. Used for testing. 
+            Returns:
+                reward: Lagrangian cost L = J + lambda * equality constraint + mu * inequality constraint. 
+        '''
         if self.mode == 'TEST':
             with torch.no_grad():
                 u_1 = actor_c1(self.x_0)
@@ -186,6 +219,14 @@ class WitsEnvCombined(WitsEnvSuper):
 # Environment for local search algorithm
 class WitsEnvLSA(WitsEnvSuper):
     def __init__(self, k, sigma, device, mode='TRAIN'):
+        '''
+            Initialises a Local Search Algorithm environment
+            Args:
+                k (float): Witsenhausen cost parameter
+                sigma (float): standard dev of x
+                device (torch.device): torch GPU/CPU
+                mode (string): TRAIN/TEST            
+        '''
         torch.set_default_dtype(torch.float32)
         super().__init__(k, sigma, device, mode=mode)
         
@@ -196,6 +237,14 @@ class WitsEnvLSA(WitsEnvSuper):
             
     # generate u_1 tensor from randomly generated x0, given set of y2 values
     def generate_u1_tensor_random(self, y2, x1):
+        '''
+            Given x1 = f(x) + eta (where x and eta sampled randomly), calculates g(y2)
+            Args:
+                y2 (torch.tensor): values of y2 at which we want to calculate g(y2) 
+                x1 (torch.tensor): values of f(x)+eta generated by MC estimation and first controller
+            Returns:
+            out (torch.tensor): g(y2), created through importance sampling
+        '''
         # uses importance sampling 
         # the probability of finding y given a fixed x1 value is proportional to e^(-(y-x1)^2/2)
         # (as w is distributed normally with mean 0 variance 1)
@@ -217,6 +266,15 @@ class WitsEnvLSA(WitsEnvSuper):
     # this explicity calculates the required integrals then uses them to generate y2
     # slower but less prone to noise than the random method
     def generate_u1_tensor(self, y2, x1, x0):
+        '''
+            Given x1 = f(x) + eta, and x0 = x, where x is evenly sampled from some range, calculates g(y2)
+            Args:
+                y2 (torch.tensor): values of y2 at which we want to calculate g(y2) 
+                x1 (torch.tensor): values of f(x)+eta generated by first controller
+                x0 (torch.tensor): values of x evenly sampled from some range
+            Returns:
+            out (torch.tensor): g(y2), created through integration
+        '''
         f_X = lambda x : 1.0/(self.sigma* torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-x**2/(2*self.sigma**2))
         f_W = lambda w : 1.0/(torch.sqrt(2*torch.tensor(torch.pi, device=self.device))) * torch.exp(-w**2/(2))
 
@@ -236,6 +294,17 @@ class WitsEnvLSA(WitsEnvSuper):
         return u1
 
     def step_timesteps(self, actor_c1, actor_c2=None, timesteps=100000):
+        '''
+            Calculates gradients for output tensors
+            Args:
+                actor_c1 (kan.KAN): model representing first controller 
+                timesteps (int): number of divisions
+            Returns:
+                dJ_dx1 (torch.Tensor): first derivative of loss at x1
+                dx1_dJ_dx1 (torch.Tensor): second derivative of loss at x1
+                x1 (torch.Tensor): output of first controller
+                x0 (torch.Tensor): input to first controller (for stop condition calculation)
+        '''
         # actor_c1 = x1(x0) in paper
         # No need for actor c2 as it can be directly calculated
         if self.mode == 'TEST':
@@ -324,9 +393,16 @@ class WitsEnvLSA(WitsEnvSuper):
         return dJ_dx1, dx1_dJ_dx1, x_1, x_0
    
 
-# implements an environment for the Frechet Gradient Method (NOT Frechet Discrete Gradient)
 class WitsEnvFGD(WitsEnvSuper):
     def __init__(self, k, sigma, device, mode='TRAIN'):
+        '''
+            Initialises Frechet Gradient Descent environment
+            Args:
+                k (float): Witsenhausen cost parameter
+                sigma (float): standard dev of x
+                device (torch.device): torch GPU/CPU
+                mode (string): TRAIN/TEST
+        '''
         super().__init__(k, sigma, device, mode=mode)
         if mode == 'TEST':
             TEST_TIMESTEPS = 20000
@@ -334,6 +410,19 @@ class WitsEnvFGD(WitsEnvSuper):
             self.noise = torch.normal(0, 1, (TEST_TIMESTEPS, 1), device=self.device)
 
     def step_timesteps(self, actor_c1, actor_c2, timesteps=10000):
+        '''
+            Calculates (MC estimated) gradients for output tensors 
+            Args:
+                actor_c1 (kan.KAN): model representing first controller
+                actor_c2 (kan.KAN): model representing second controller 
+                timesteps (int): number of timesteps
+            Returns:
+                frechet_grad_1 (torch.Tensor): Riesz representation of Frechet Gradient of loss for first controller 
+                frechet_grad_2 (torch.Tensor): Riesz representation of Frechet Gradient of loss for second controller 
+                x1 (torch.Tensor): output of first controller
+                x2 (torch.Tensor): output of second controller
+                J (torch.Tensor): MC estimated Witsenhausen loss
+        '''
         if self.mode == 'TEST':
             with torch.no_grad():
                 x1 = actor_c1(self.x_0)
@@ -416,6 +505,15 @@ class WitsEnvFGD(WitsEnvSuper):
 # mu_k+1 = mu_k - tau*zeta_k+1
 class WitsEnvMomentum(WitsEnvSuper):
     def __init__(self, k, sigma, device, mode='TRAIN', beta=0.05):
+        '''
+            Initialises Polyak Momentum + Frechet Gradient Descent environment
+            Args:
+                k (float): Witsenhausen cost parameter
+                sigma (float): standard dev of x
+                device (torch.device): torch GPU/CPU
+                mode (string): TRAIN/TEST
+                beta (float): momentum hyperparameter dictating how "heavy" Polyak's heavy ball is
+        '''
         super().__init__(k, sigma, device, mode=mode)
         self.beta = beta
         TEST_TIMESTEPS = 100000
@@ -425,6 +523,19 @@ class WitsEnvMomentum(WitsEnvSuper):
         self.zeta_2 = torch.zeros((1,1))
     
     def step_timesteps(self, actor_c1, actor_c2, timesteps=2000):
+        '''
+            Calculates descent direction for Polyak's heavy ball method
+            Args:
+                actor_c1 (kan.KAN): model representing first controller
+                actor_c2 (kan.KAN): model representing second controller 
+                timesteps (int): number of timesteps
+            Returns:
+                zeta_1 (torch.Tensor): Updated Polyak descent direction for first controller
+                zeta_2 (torch.Tensor): Updated Polyak descent direction for first controller
+                x1 (torch.Tensor): output of first controller
+                x2 (torch.Tensor): output of second controller
+                J (torch.Tensor): MC estimated Witsenhausen loss
+        '''
         if self.mode == 'TEST':
             with torch.no_grad():
                 x1 = actor_c1(self.x_0)
