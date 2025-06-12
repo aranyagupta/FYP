@@ -117,7 +117,7 @@ class TrainingFramework:
         for kan_hyp in self.KAN_hyps:
             for sigma in self.sigma_range:
                 grid_range = [-3*sigma, 3*sigma]
-                grid = min(int(3*sigma+1), 11)
+                grid = 11
                 prefit_model_1 = kanType(width=kan_hyp, grid=grid, k=3, seed=42, grid_range=grid_range, device=self.device)
                 prefit_model_2 = kanType(width=kan_hyp, grid=grid, k=3, seed=42, grid_range=grid_range, device=self.device)
                 finished_sigma = [self._check_exists(modelType, k, sigma, kan_hyp) for k in self.k_range]

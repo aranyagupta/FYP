@@ -463,7 +463,7 @@ class WitsEnvFGD(WitsEnvSuper):
 # implements zeta_k+1 = beta * zeta_k + (1-beta)*frechetgradient_k
 # mu_k+1 = mu_k - tau*zeta_k+1
 class WitsEnvMomentum(WitsEnvSuper):
-    def __init__(self, k, sigma, device, mode='TRAIN', beta=0.10):
+    def __init__(self, k, sigma, device, mode='TRAIN', beta=0.05):
         '''
             Initialises Polyak Momentum + Frechet Gradient Descent environment
             Args:
