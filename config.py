@@ -6,15 +6,15 @@ Training configurations
 """
 configs = [
     {
-        "kvals":[1.00],
-        "sigvals":[2.24, 3.16, 3.87, 4.47, 5.00, 5.48, 5.92, 6.32, 6.71],
-        "kanHyps":[[1,12,1]],
+        "kvals":[0.20],
+        "sigvals":[5.00],
+        "kanHyps":[[1,20,1]],
         "kanType":kan.KAN,
         "env":WitsEnv.WitsEnvMomentum,
         "trainer":WitsTrainer.WitsMomentum,
         "modelType":"MOML",
-        "prefit_func_1": None,
-        "prefit_func_2": None,
+        "prefit_func_1": lambda x : x,
+        "prefit_func_2": lambda x : x,
         "lr":0.01,
     },
     # Add more here...
